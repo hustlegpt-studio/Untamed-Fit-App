@@ -5,6 +5,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerAudioRoutes } from "./replit_integrations/audio";
+import { registerKevinRoutes } from "./api/kevin";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -116,6 +117,7 @@ export async function registerRoutes(
   // Register integrations
   registerChatRoutes(app);
   registerAudioRoutes(app);
+  registerKevinRoutes(app);
 
   // Seed DB with some mocked content
   seedDatabase().catch(console.error);
@@ -161,7 +163,6 @@ async function seedDatabase() {
       description: "Chest exercise using bodyweight",
       category: "Chest",
       type: "body_part",
-      duration: null,
       isPremium: false
     });
   }

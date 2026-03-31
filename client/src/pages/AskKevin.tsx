@@ -49,65 +49,101 @@ export default function AskKevin() {
 
     const userMsg = { role: "user", content: input };
     setMessages(prev => [...prev, userMsg]);
+    const userInput = input;
     setInput("");
     setIsTyping(true);
     setUsedCount(prev => prev + 1);
 
-    // Check if user wants to start a workout
-    const userWantsToStart = isStartPhrase(input);
-    
-    // Analyze user goal and detect body parts
-    const analysis = analyzeUserGoal(input);
-    
-    // Simulate AI response
-    setTimeout(() => {
-      let responseContent = "That's a solid question. When it comes to that, you gotta focus on the 'Mindset Marathon'. Don't just train your muscles, train your will. Keep pushing!";
-      
+    try {
+      // Call the real AI API
+      const response = await fetch('/api/kevin/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userInput,
+          conversationHistory: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response from Trainer KG');
+      }
+
+      const assistantMsg = { 
+        role: "assistant", 
+        content: data.response
+      };
+      setMessages(prev => [...prev, assistantMsg]);
+
+      // Check if user wants to start a workout (keep existing logic for workout features)
+      const userWantsToStart = isStartPhrase(userInput);
       if (userWantsToStart) {
         const quote = getRandomQuote();
-        responseContent = `${quote}\n\nAlright, let's get to work! I'm setting the stopwatch now. Show me what you got!`;
-        // Load a random workout
         const randomWorkout = WORKOUTS[Math.floor(Math.random() * WORKOUTS.length)];
         setCurrentWorkout(randomWorkout);
         setStopwatchActive(true);
-      } else if (analysis.detected) {
-        // AI Trainer conversation flow
-        const trainerResponse = getTrainerResponse(analysis);
+      }
+
+    } catch (error) {
+      console.error('AI API Error:', error);
+      
+      // Fallback to existing mock logic if AI fails
+      setTimeout(() => {
+        let responseContent = "That's a solid question. When it comes to that, you gotta focus on the 'Mindset Marathon'. Don't just train your muscles, train your will. Keep pushing!";
         
-        if (trainerResponse === "Got it. Before I recommend a workout, let me check your body type and goals.") {
-          // Fetch user fitness profile
-          const profile = getUserFitnessProfile();
-          setUserProfile(profile);
+        const userWantsToStart = isStartPhrase(userInput);
+        const analysis = analyzeUserGoal(userInput);
+        
+        if (userWantsToStart) {
+          const quote = getRandomQuote();
+          responseContent = `${quote}\n\nAlright, let's get to work! I'm setting the stopwatch now. Show me what you got!`;
+          const randomWorkout = WORKOUTS[Math.floor(Math.random() * WORKOUTS.length)];
+          setCurrentWorkout(randomWorkout);
+          setStopwatchActive(true);
+        } else if (analysis.detected) {
+          const trainerResponse = getTrainerResponse(analysis);
           
-          // Recommend workout based on body part and profile
-          if (analysis.bodyPart) {
-            const recommended = recommendWorkout(analysis.bodyPart, {
-              bodyType: profile.bodyType,
-              goals: profile.goals,
-              experienceLevel: profile.experience
-            });
+          if (trainerResponse === "Got it. Before I recommend a workout, let me check your body type and goals.") {
+            const profile = getUserFitnessProfile();
+            setUserProfile(profile);
             
-            if (recommended) {
-              setCurrentWorkout(recommended);
-              responseContent = `${trainerResponse}\n\nAlright, based on your profile, I've got a ${recommended.name} workout that fits your body type and experience level. Want me to show it?`;
+            if (analysis.bodyPart) {
+              const recommended = recommendWorkout(analysis.bodyPart, {
+                bodyType: profile.bodyType,
+                goals: profile.goals,
+                experienceLevel: profile.experience
+              });
+              
+              if (recommended) {
+                setCurrentWorkout(recommended);
+                responseContent = `${trainerResponse}\n\nAlright, based on your profile, I've got a ${recommended.name} workout that fits your body type and experience level. Want me to show it?`;
+              } else {
+                responseContent = `${trainerResponse}\n\nAlright, based on your profile, I've got a workout that fits your body type and experience level. Want me to show it?`;
+              }
             } else {
               responseContent = `${trainerResponse}\n\nAlright, based on your profile, I've got a workout that fits your body type and experience level. Want me to show it?`;
             }
           } else {
-            responseContent = `${trainerResponse}\n\nAlright, based on your profile, I've got a workout that fits your body type and experience level. Want me to show it?`;
+            responseContent = trainerResponse;
           }
-        } else {
-          responseContent = trainerResponse;
         }
-      }
-      
-      const assistantMsg = { 
-        role: "assistant", 
-        content: responseContent
-      };
-      setMessages(prev => [...prev, assistantMsg]);
-      setIsTyping(false);
-    }, 1500);
+        
+        const assistantMsg = { 
+          role: "assistant", 
+          content: responseContent
+        };
+        setMessages(prev => [...prev, assistantMsg]);
+      }, 1500);
+    }
+    
+    setIsTyping(false);
   };
 
   return (
@@ -144,7 +180,7 @@ export default function AskKevin() {
                       "w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden",
                       msg.role === "user" ? "bg-white/10" : "bg-primary/20 border border-primary/30"
                     )}>
-                      {msg.role === "user" ? <User className="w-4 h-4" /> : <img src="/logo.png" alt="Kevin" className="w-full h-full object-contain" />}
+                      {msg.role === "user" ? <User className="w-4 h-4" /> : <img src="/logo.png" alt="Trainer KG" className="w-full h-full object-contain" />}
                     </div>
                     <div className={cn(
                       "p-4 rounded-2xl text-sm leading-relaxed",
@@ -154,6 +190,11 @@ export default function AskKevin() {
                     )}>
                       {msg.content}
                     </div>
+                    {msg.role === "assistant" && (
+                      <div className="text-xs text-primary/60 font-semibold ml-2">
+                        Trainer KG
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -162,7 +203,7 @@ export default function AskKevin() {
               <div className="flex justify-start">
                 <div className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
-                    <img src="/logo.png" alt="Kevin" className="w-full h-full object-contain" />
+                    <img src="/logo.png" alt="Trainer KG" className="w-full h-full object-contain" />
                   </div>
                   <div className="bg-white/5 p-4 rounded-2xl flex gap-1">
                     <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
