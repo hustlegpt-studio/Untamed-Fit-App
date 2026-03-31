@@ -182,19 +182,21 @@ export default function AskKevin() {
                     )}>
                       {msg.role === "user" ? <User className="w-4 h-4" /> : <img src="/logo.png" alt="Trainer KG" className="w-full h-full object-contain" />}
                     </div>
-                    <div className={cn(
-                      "p-4 rounded-2xl text-sm leading-relaxed",
-                      msg.role === "user" 
-                      ? "bg-primary text-primary-foreground font-semibold rounded-tr-sm" 
-                      : "bg-white/5 text-silver border border-white/5 rounded-tl-sm"
-                    )}>
-                      {msg.content}
-                    </div>
-                    {msg.role === "assistant" && (
-                      <div className="text-xs text-primary/60 font-semibold ml-2">
-                        Trainer KG
+                    <div className="relative">
+                      <div className={cn(
+                        "p-4 rounded-2xl text-sm leading-relaxed",
+                        msg.role === "user" 
+                        ? "bg-primary text-primary-foreground font-semibold rounded-tr-sm" 
+                        : "bg-white/5 text-silver border border-white/5 rounded-tl-sm"
+                      )}>
+                        {msg.content}
                       </div>
-                    )}
+                      {msg.role === "assistant" && (
+                        <div className="absolute -top-2 -right-12 text-xs text-primary/60 font-semibold bg-black/80 px-2 py-1 rounded">
+                          Trainer KG
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ))}
