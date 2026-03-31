@@ -4,7 +4,8 @@ import { generateText } from "ai";
 import Together from "together-ai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
-import { getCurrentUserProfile, updateUserProfile } from "@/utils/auth";
+// Note: Backend cannot access localStorage, so profile management is handled via API
+// Profile data is passed from frontend in requests
 
 // Environment variables
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -107,21 +108,18 @@ class ProfileManager {
   private profile: any = null;
   private profileConfirmed = false;
 
+  // Backend profile management - profile data is passed from frontend
+  setProfile(profileData: any): void {
+    this.profile = profileData;
+  }
+
   loadProfile(): any {
-    if (!this.profile) {
-      const userProfile = getCurrentUserProfile();
-      this.profile = userProfile?.profile || {};
-    }
-    return this.profile;
+    return this.profile || {};
   }
 
   updateProfile(updates: any): void {
     this.profile = { ...this.profile, ...updates };
-    try {
-      updateUserProfile(this.profile);
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-    }
+    // Note: Actual profile saving is handled by frontend
   }
 
   confirmProfile(): void {
@@ -490,12 +488,23 @@ Now that we have your details locked in, tell me — what do you want to focus o
     this.persona = new PersonaManager();
   }
 
-  // Get profile status
-  getProfileStatus() {
+  async getProfileStatus(profileData?: any): Promise<any> {
+    if (profileData) {
+      this.profile.setProfile(profileData);
+    }
+    
     return {
       profile: this.profile.loadProfile(),
       isConfirmed: this.profile.isProfileConfirmed(),
       summary: this.profile.getProfileSummary()
+    };
+  }
+
+  async updateProfile(updates: any): Promise<any> {
+    this.profile.updateProfile(updates);
+    return {
+      profile: this.profile.loadProfile(),
+      updated: true
     };
   }
 }

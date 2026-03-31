@@ -6,6 +6,7 @@ import { z } from "zod";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerAudioRoutes } from "./replit_integrations/audio";
 import { registerKevinRoutes } from "./api/kevin";
+import { registerKevinFreeRoutes } from "./api/kevin-free";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -118,6 +119,7 @@ export async function registerRoutes(
   registerChatRoutes(app);
   registerAudioRoutes(app);
   registerKevinRoutes(app);
+  registerKevinFreeRoutes(app);
 
   // Seed DB with some mocked content
   seedDatabase().catch(console.error);
