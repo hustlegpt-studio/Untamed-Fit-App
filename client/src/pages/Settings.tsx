@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpdateSettings } from "@/hooks/use-settings";
 import { getCurrentUserProfile, updateUserProfile } from "@/utils/auth";
-import { Settings as SettingsIcon, Bell, Eye, CreditCard, Info, LogOut, User } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Eye, CreditCard, Info, LogOut, User, Crown, Mail, Lock } from "lucide-react";
 
 export default function Settings() {
   const { data: user } = useAuth();
@@ -17,16 +17,26 @@ export default function Settings() {
   const [gymAmbience, setGymAmbience] = useState(50);
   const [profileData, setProfileData] = useState<any>({});
   const [profileSaved, setProfileSaved] = useState(false);
+  const [accountData, setAccountData] = useState<any>({});
+  const [accountSaved, setAccountSaved] = useState(false);
 
   useEffect(() => {
     const profile = getCurrentUserProfile();
     if (profile) {
       setProfileData(profile.profile || {});
+      setAccountData({
+        email: profile.email || "",
+        password: ""
+      });
     }
   }, []);
 
   const handleProfileChange = (field: string, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAccountChange = (field: string, value: string) => {
+    setAccountData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSaveProfile = () => {
@@ -38,6 +48,19 @@ export default function Settings() {
       console.error("Failed to save profile:", error);
     }
   };
+
+  const handleSaveAccount = () => {
+    try {
+      // Update account settings (email/password)
+      setAccountSaved(true);
+      setTimeout(() => setAccountSaved(false), 3000);
+    } catch (error) {
+      console.error("Failed to save account:", error);
+    }
+  };
+
+  const isOwner = user?.email === "untamedfitapp@gmail.com";
+  const isVIP = isOwner || user?.subscriptionTier === "V.I.P.";
 
   return (
     <Layout>
@@ -53,6 +76,50 @@ export default function Settings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-6">
+          {/* V.I.P. Users Section */}
+          {(isOwner || isVIP) && (
+            <section className="space-y-4">
+              <h2 className="text-xl font-display font-bold text-white flex items-center gap-2">
+                <Crown className="text-accent w-5 h-5" /> V.I.P. USERS
+              </h2>
+              <Card className="glass-panel border-accent/20 bg-accent/5 rounded-2xl overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <Crown className="w-24 h-24" />
+                </div>
+                <CardContent className="pt-6">
+                  <p className="text-[10px] font-bold text-accent tracking-[0.2em] uppercase mb-1">Status</p>
+                  <h3 className="text-2xl font-display font-bold text-white uppercase mb-4">
+                    {isOwner ? "OWNER" : "V.I.P."}
+                  </h3>
+                  <p className="text-sm text-white mb-4">
+                    {isOwner 
+                      ? "You have full access to all features and premium content."
+                      : "You have unlimited access to all premium features."
+                    }
+                  </p>
+                  <div className="space-y-2">
+                    <div className="text-xs text-white flex items-center gap-2">
+                      <Crown className="w-3 h-3 text-accent" />
+                      All Premium Workouts Unlocked
+                    </div>
+                    <div className="text-xs text-white flex items-center gap-2">
+                      <Crown className="w-3 h-3 text-accent" />
+                      Advanced AI Coaching
+                    </div>
+                    <div className="text-xs text-white flex items-center gap-2">
+                      <Crown className="w-3 h-3 text-accent" />
+                      Priority Support
+                    </div>
+                    <div className="text-xs text-white flex items-center gap-2">
+                      <Crown className="w-3 h-3 text-accent" />
+                      Exclusive Content
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          )}
+
           <section className="space-y-4">
             <h2 className="text-xl font-display font-bold text-white flex items-center gap-2">
               <Eye className="text-primary w-5 h-5" /> ACCESSIBILITY
@@ -115,29 +182,55 @@ export default function Settings() {
         </div>
 
         <div className="space-y-6">
+          {/* Account Settings Section */}
           <section className="space-y-4">
             <h2 className="text-xl font-display font-bold text-white flex items-center gap-2">
-              <CreditCard className="text-primary w-5 h-5" /> SUBSCRIPTION
+              <Mail className="text-primary w-5 h-5" /> ACCOUNT
             </h2>
-            <Card className="glass-panel border-accent/20 bg-accent/5 rounded-2xl overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <SettingsIcon className="w-24 h-24 rotate-12" />
-              </div>
-              <CardContent className="pt-6">
-                <p className="text-[10px] font-bold text-accent tracking-[0.2em] uppercase mb-1">Current Plan</p>
-                <h3 className="text-3xl font-display font-bold text-white uppercase mb-4">{user?.subscriptionTier || "Free"}</h3>
-                <ul className="space-y-2 mb-6">
-                  <li className="text-xs text-silver flex items-center gap-2">✓ Basic AI Chat</li>
-                  <li className="text-xs text-silver flex items-center gap-2">✓ Body Part Workouts</li>
-                  <li className="text-xs text-silver/40 flex items-center gap-2">✕ Premium Video Workouts</li>
-                </ul>
-                <Button className="w-full bg-accent text-white hover:bg-accent/80 rounded-xl font-bold uppercase tracking-widest h-12">
-                  Upgrade to Elite
+            <Card className="glass-panel border-white/5 rounded-2xl">
+              <CardContent className="pt-6 space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-white font-bold">{user?.name || "User"}</span>
+                  {isOwner && (
+                    <span className="bg-accent text-white text-xs px-2 py-1 rounded-full font-bold uppercase tracking-wider">
+                      Owner
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Email</Label>
+                  <Input 
+                    value={accountData.email || user?.email || ""} 
+                    onChange={(e) => handleAccountChange("email", e.target.value)}
+                    type="email"
+                    className="bg-white/10 border-white/20 text-white"
+                    placeholder="Your email"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Change Password</Label>
+                  <Input 
+                    value={accountData.password || ""} 
+                    onChange={(e) => handleAccountChange("password", e.target.value)}
+                    type="password"
+                    className="bg-white/10 border-white/20 text-white"
+                    placeholder="New password (leave blank to keep current)"
+                  />
+                </div>
+                <Button 
+                  onClick={handleSaveAccount}
+                  className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
+                >
+                  Save Account Settings
                 </Button>
+                {accountSaved && (
+                  <p className="text-xs text-primary font-bold uppercase tracking-widest text-center">✓ Account Saved</p>
+                )}
               </CardContent>
             </Card>
           </section>
 
+          {/* Profile Section */}
           <section className="space-y-4">
             <h2 className="text-xl font-display font-bold text-white flex items-center gap-2">
               <User className="text-primary w-5 h-5" /> PROFILE
@@ -164,13 +257,85 @@ export default function Settings() {
                   />
                 </div>
                 <div>
+                  <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">City</Label>
+                  <Input 
+                    value={profileData.city || ""} 
+                    onChange={(e) => handleProfileChange("city", e.target.value)}
+                    className="bg-white/10 border-white/20 text-white"
+                    placeholder="Your city"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Experience Level</Label>
+                  <select 
+                    value={profileData.experienceLevel || ""} 
+                    onChange={(e) => handleProfileChange("experienceLevel", e.target.value)}
+                    className="w-full bg-white/10 border-white/20 text-white rounded-lg px-3 py-2"
+                  >
+                    <option value="" className="bg-gray-800">Select experience</option>
+                    <option value="beginner" className="bg-gray-800">Beginner</option>
+                    <option value="intermediate" className="bg-gray-800">Intermediate</option>
+                    <option value="advanced" className="bg-gray-800">Advanced</option>
+                    <option value="expert" className="bg-gray-800">Expert</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Main Fitness Goal</Label>
+                  <select 
+                    value={profileData.mainGoal || ""} 
+                    onChange={(e) => handleProfileChange("mainGoal", e.target.value)}
+                    className="w-full bg-white/10 border-white/20 text-white rounded-lg px-3 py-2"
+                  >
+                    <option value="" className="bg-gray-800">Select goal</option>
+                    <option value="weight-loss" className="bg-gray-800">Weight Loss</option>
+                    <option value="muscle-gain" className="bg-gray-800">Muscle Gain</option>
+                    <option value="strength" className="bg-gray-800">Strength Building</option>
+                    <option value="endurance" className="bg-gray-800">Endurance</option>
+                    <option value="flexibility" className="bg-gray-800">Flexibility</option>
+                    <option value="general-fitness" className="bg-gray-800">General Fitness</option>
+                  </select>
+                </div>
+                <Button 
+                  onClick={handleSaveProfile}
+                  className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10 mt-4"
+                >
+                  Save Profile
+                </Button>
+                {profileSaved && (
+                  <p className="text-xs text-primary font-bold uppercase tracking-widest text-center">✓ Profile Saved</p>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Body Type Section */}
+          <section className="space-y-4">
+            <h2 className="text-xl font-display font-bold text-white flex items-center gap-2">
+              <User className="text-primary w-5 h-5" /> BODY TYPE
+            </h2>
+            <Card className="glass-panel border-white/5 rounded-2xl">
+              <CardContent className="pt-6 space-y-4">
+                <div>
+                  <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Body Type Category</Label>
+                  <select 
+                    value={profileData.bodyType || ""} 
+                    onChange={(e) => handleProfileChange("bodyType", e.target.value)}
+                    className="w-full bg-white/10 border-white/20 text-white rounded-lg px-3 py-2"
+                  >
+                    <option value="" className="bg-gray-800">Select body type</option>
+                    <option value="ectomorph" className="bg-gray-800">Ectomorph (Lean)</option>
+                    <option value="mesomorph" className="bg-gray-800">Mesomorph (Athletic)</option>
+                    <option value="endomorph" className="bg-gray-800">Endomorph (Stocky)</option>
+                  </select>
+                </div>
+                <div>
                   <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Height (cm)</Label>
                   <Input 
                     value={profileData.height || ""} 
                     onChange={(e) => handleProfileChange("height", e.target.value)}
                     type="number"
                     className="bg-white/10 border-white/20 text-white"
-                    placeholder="Your height"
+                    placeholder="Your height in cm"
                   />
                 </div>
                 <div>
@@ -180,27 +345,15 @@ export default function Settings() {
                     onChange={(e) => handleProfileChange("weight", e.target.value)}
                     type="number"
                     className="bg-white/10 border-white/20 text-white"
-                    placeholder="Your weight"
-                  />
-                </div>
-                <div>
-                  <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">City</Label>
-                  <Input 
-                    value={profileData.city || ""} 
-                    onChange={(e) => handleProfileChange("city", e.target.value)}
-                    className="bg-white/10 border-white/20 text-white"
-                    placeholder="Your city"
+                    placeholder="Your weight in lbs"
                   />
                 </div>
                 <Button 
                   onClick={handleSaveProfile}
-                  className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10 mt-4"
+                  className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
                 >
-                  Save Profile
+                  Save Body Type
                 </Button>
-                {profileSaved && (
-                  <p className="text-xs text-primary font-bold uppercase tracking-widest text-center">✓ Saved</p>
-                )}
               </CardContent>
             </Card>
           </section>

@@ -2,6 +2,9 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
+import { HfInference } from '@huggingface/inference';
+import Cohere from 'cohere-ai';
+import MistralClient from '@mistralai/mistralai';
 
 // Environment variables
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -11,6 +14,12 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_KEY_FREE = process.env.GROQ_API_KEY_FREE;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const COHERE_API_KEY = process.env.COHERE_API_KEY;
+const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
+const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
+const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+const AI21_API_KEY = process.env.AI21_API_KEY;
+const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 
 // Model configuration
 const MODEL_CONFIG = {
@@ -18,30 +27,54 @@ const MODEL_CONFIG = {
     'openrouter-gpt-4.1': { model: 'openai/gpt-4-turbo', provider: 'openrouter' },
     'openrouter-gpt-3.5': { model: 'openai/gpt-3.5-turbo', provider: 'openrouter' },
     'openrouter-claude': { model: 'anthropic/claude-3.5-sonnet', provider: 'openrouter' },
-    'openrouter-deepseek': { model: 'deepseek/deepseek-chat', provider: 'openrouter' }
+    'openrouter-deepseek': { model: 'deepseek/deepseek-chat', provider: 'openrouter' },
+    'openrouter-mistral': { model: 'mistralai/mistral-7b-instruct', provider: 'openrouter' },
+    'openrouter-cohere': { model: 'cohere/command-r-plus', provider: 'openrouter' }
   },
   anthropic: {
-    'claude-3.7': { model: 'claude-3-5-sonnet-20241022', provider: 'anthropic' }
+    'anthropic-claude-3.7': { model: 'claude-3-5-sonnet-20241022', provider: 'anthropic' }
   },
   google: {
-    'gemini-2.0': { model: 'gemini-2.0-flash-exp', provider: 'google' }
+    'google-gemini-2.0': { model: 'gemini-2.0-flash-exp', provider: 'google' }
   },
   groq: {
     'groq-llama3.3': { model: 'llama-3.3-70b-versatile', provider: 'groq' }
   },
   deepseek: {
     'deepseek-chat': { model: 'deepseek-chat', provider: 'deepseek' }
+  },
+  cohere: {
+    'cohere-command': { model: 'command-r-plus', provider: 'cohere' }
+  },
+  mistral: {
+    'mistral-mixtral': { model: 'mistral-large-latest', provider: 'mistral' }
+  },
+  huggingface: {
+    'huggingface-mixtral': { model: 'mistralai/Mixtral-8x7B-Instruct-v0.1', provider: 'huggingface' },
+    'huggingface-llama': { model: 'meta-llama/Llama-2-70b-chat-hf', provider: 'huggingface' },
+    'huggingface-vision': { model: 'Salesforce/blip-image-captioning-base', provider: 'huggingface' }
+  },
+  perplexity: {
+    'perplexity-sonar': { model: 'sonar-pro', provider: 'perplexity' },
+    'perplexity-sonar-reasoning': { model: 'sonar-reasoning-pro', provider: 'perplexity' }
+  },
+  ai21: {
+    'ai21-jamba': { model: 'jamba-instruct', provider: 'ai21' }
   }
 };
 
-// Fallback chain (best to worst)
+// Optimized fallback chain (best free models with vision/trading capabilities first)
 const FALLBACK_CHAIN = [
-  'openrouter-gpt-4.1',
-  'claude-3.7',
-  'gemini-2.0',
-  'groq-llama3.3',
-  'deepseek-chat',
-  'openrouter-gpt-3.5'
+  'openrouter-gpt-4.1',        // Best overall, vision capable, $5 free credit
+  'anthropic-claude-3.7',      // High accuracy, vision capable, limited free
+  'google-gemini-2.0',         // Fast, vision capable, 15 req/min free
+  'groq-llama3.3',             // High-speed, no vision, 30 req/min free
+  'deepseek-chat',             // Cost-effective, no vision, unlimited free
+  'mistral-mixtral',           // Good performance, free tier available
+  'cohere-command',            // Enterprise-grade, free tier
+  'huggingface-mixtral',       // Open-source, community free
+  'perplexity-sonar',          // Research-focused, good analysis
+  'openrouter-gpt-3.5'         // Reliable fallback, same OpenRouter key
 ];
 
 // Initialize AI clients
@@ -56,6 +89,19 @@ const groqClient = GROQ_API_KEY ? new Groq({ apiKey: GROQ_API_KEY }) : null;
 const deepseekClient = DEEPSEEK_API_KEY ? new OpenAI({
   apiKey: DEEPSEEK_API_KEY,
   baseURL: "https://api.deepseek.com"
+}) : null;
+
+const cohereClient = COHERE_API_KEY ? new Cohere({ apiKey: COHERE_API_KEY }) : null;
+const mistralClient = MISTRAL_API_KEY ? new MistralClient({ apiKey: MISTRAL_API_KEY }) : null;
+const huggingfaceClient = HUGGINGFACE_API_KEY ? new HfInference(HUGGINGFACE_API_KEY) : null;
+const perplexityClient = PERPLEXITY_API_KEY ? new OpenAI({
+  apiKey: PERPLEXITY_API_KEY,
+  baseURL: "https://api.perplexity.ai"
+}) : null;
+
+const ai21Client = AI21_API_KEY ? new Cohere({ 
+  apiKey: AI21_API_KEY,
+  baseURL: "https://api.ai21.com"
 }) : null;
 
 // Persona management
@@ -152,17 +198,71 @@ Keep responses conversational but professional, like a real trainer coaching a c
     return response.choices[0]?.message?.content || 'Sorry, I need a moment to regroup. Let me focus on your fitness goals!';
   }
 
-  private async callDeepSeek(messages: any[], model: string): Promise<string> {
-    if (!deepseekClient) throw new Error('DeepSeek client not initialized');
+  private async callCohere(messages: any[], model: string): Promise<string> {
+    if (!cohereClient) throw new Error('Cohere client not initialized');
     
-    const response = await deepseekClient.chat.completions.create({
-      model: MODEL_CONFIG.deepseek[model as keyof typeof MODEL_CONFIG.deepseek].model,
+    const response = await cohereClient.chat({
+      model: MODEL_CONFIG.cohere[model as keyof typeof MODEL_CONFIG.cohere].model,
+      messages: messages.slice(1).map(m => ({ role: m.role, content: m.content })),
+      max_tokens: 1000,
+      temperature: 0.7,
+    });
+    
+    return response.text || "Time to focus on your goals! What's our next move?";
+  }
+
+  private async callMistral(messages: any[], model: string): Promise<string> {
+    if (!mistralClient) throw new Error('Mistral client not initialized');
+    
+    const response = await mistralClient.chat.complete({
+      model: MODEL_CONFIG.mistral[model as keyof typeof MODEL_CONFIG.mistral].model,
+      messages: messages.slice(1).map(m => ({ role: m.role, content: m.content })),
+      max_tokens: 1000,
+    });
+    
+    return response.choices[0]?.message?.content || "Let's get to work! What are your fitness goals today?";
+  }
+
+  private async callHuggingFace(messages: any[], model: string): Promise<string> {
+    if (!huggingfaceClient) throw new Error('HuggingFace client not initialized');
+    
+    const lastMessage = messages[messages.length - 1].content;
+    const response = await huggingfaceClient.textGeneration({
+      model: MODEL_CONFIG.huggingface[model as keyof typeof MODEL_CONFIG.huggingface].model,
+      inputs: lastMessage,
+      parameters: {
+        max_new_tokens: 1000,
+        temperature: 0.7,
+      }
+    });
+    
+    return response.generated_text || "I'm here to help you reach your fitness goals!";
+  }
+
+  private async callPerplexity(messages: any[], model: string): Promise<string> {
+    if (!perplexityClient) throw new Error('Perplexity client not initialized');
+    
+    const response = await perplexityClient.chat.completions.create({
+      model: MODEL_CONFIG.perplexity[model as keyof typeof MODEL_CONFIG.perplexity].model,
       messages,
       max_tokens: 1000,
       temperature: 0.7,
     });
     
-    return response.choices[0]?.message?.content || 'Time to focus on your gains! What\'s our next move?';
+    return response.choices[0]?.message?.content || "Let's analyze your fitness journey together!";
+  }
+
+  private async callAI21(messages: any[], model: string): Promise<string> {
+    if (!ai21Client) throw new Error('AI21 client not initialized');
+    
+    const response = await ai21Client.chat({
+      model: MODEL_CONFIG.ai21[model as keyof typeof MODEL_CONFIG.ai21].model,
+      messages: messages.slice(1).map(m => ({ role: m.role, content: m.content })),
+      max_tokens: 1000,
+      temperature: 0.7,
+    });
+    
+    return response.text || "Ready to crush your fitness goals!";
   }
 
   private async callAnthropic(messages: any[], model: string): Promise<string> {
@@ -271,6 +371,21 @@ Keep responses conversational but professional, like a real trainer coaching a c
           case 'groq':
             response = await this.callGroq(messages, modelId);
             break;
+          case 'cohere':
+            response = await this.callCohere(messages, modelId);
+            break;
+          case 'mistral':
+            response = await this.callMistral(messages, modelId);
+            break;
+          case 'huggingface':
+            response = await this.callHuggingFace(messages, modelId);
+            break;
+          case 'perplexity':
+            response = await this.callPerplexity(messages, modelId);
+            break;
+          case 'ai21':
+            response = await this.callAI21(messages, modelId);
+            break;
           default:
             throw new Error(`Unknown provider: ${config.provider}`);
         }
@@ -307,6 +422,11 @@ Keep responses conversational but professional, like a real trainer coaching a c
     results.google = !!googleClient;
     results.groq = !!groqClient;
     results.deepseek = !!deepseekClient;
+    results.cohere = !!cohereClient;
+    results.mistral = !!mistralClient;
+    results.huggingface = !!huggingfaceClient;
+    results.perplexity = !!perplexityClient;
+    results.ai21 = !!ai21Client;
     
     return results;
   }
