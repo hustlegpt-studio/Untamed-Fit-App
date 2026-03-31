@@ -1,0 +1,137 @@
+====================================================
+MICRO‑CHUNK I — TRAINEE BOOKING SYSTEM (USER SIDE)
+====================================================
+
+Goal:
+Create a new page where trainees can view Kevin’s availability and book training sessions.
+
+====================================================
+STEP 1 — CREATE NEW PAGE
+====================================================
+
+Create:
+  /pages/BookSession.tsx
+
+This page should include:
+
+• Title: “Book a Training Session”
+• Calendar UI (same as TrainingSchedule)
+• When user clicks a day:
+    - Show available time slots
+    - Show “Book Session” button
+• If no availability:
+    - Show “No available sessions on this day.”
+
+====================================================
+STEP 2 — LOAD OWNER SCHEDULE
+====================================================
+
+Import:
+import { getSessions, saveSession } from "../utils/schedule";
+
+• Load Kevin’s existing sessions
+• Mark days that are already fully booked
+• Mark days with open availability
+
+====================================================
+STEP 3 — BOOKING FORM
+====================================================
+
+When trainee selects a time slot:
+
+Show a booking form:
+• Confirm date
+• Confirm time
+• Confirm duration
+• Confirm training type
+• Notes (optional)
+• “Confirm Booking” button
+
+====================================================
+STEP 4 — SAVE BOOKING
+====================================================
+
+When trainee confirms:
+
+1. Create a session object:
+   {
+     id: crypto.randomUUID(),
+     trainee: activeUserEmail,
+     date,
+     time,
+     duration,
+     type,
+     notes,
+     status: "booked",
+     createdAt: new Date().toISOString()
+   }
+
+2. Call saveSession(session)
+
+3. Add session to:
+   - Kevin’s schedule
+   - Trainee’s schedule
+
+4. Show success message:
+   “Your session has been booked!”
+
+====================================================
+STEP 5 — NOTIFICATION FOR KEVIN
+====================================================
+
+Create:
+  /utils/notifications.ts
+
+Add:
+
+export function addNotification(note) {
+  const notes = JSON.parse(localStorage.getItem("untamedNotifications") || "[]");
+  notes.push(note);
+  localStorage.setItem("untamedNotifications", JSON.stringify(notes));
+}
+
+When a trainee books:
+addNotification({
+  id: crypto.randomUUID(),
+  type: "booking",
+  message: `${traineeEmail} booked a session on ${date} at ${time}.`,
+  createdAt: new Date().toISOString()
+});
+
+====================================================
+STEP 6 — CANCELLATION RULE
+====================================================
+
+On trainee side:
+• Add “Cancel Session” button
+• Only allow cancellation if:
+    sessionDate - today >= 2 days
+
+If too late:
+• Show message:
+  “Sessions can only be canceled with 2 days’ notice.”
+
+====================================================
+STEP 7 — SIDEBAR LINK
+====================================================
+
+Add a new sidebar link for trainees:
+“Book a Session”
+
+Link to:
+  /book-session
+
+====================================================
+DO NOT ADD PAYMENT SYSTEM YET
+====================================================
+
+This micro-chunk ONLY adds:
+• Trainee booking page
+• Availability view
+• Booking form
+• Auto-sync to Kevin’s schedule
+• Notifications
+• Cancellation rule
+• Sidebar link
+
+Begin building now.

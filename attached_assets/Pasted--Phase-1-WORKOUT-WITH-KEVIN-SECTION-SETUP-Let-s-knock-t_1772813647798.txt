@@ -1,0 +1,183 @@
+✅ Phase 1: “WORKOUT WITH KEVIN” SECTION SETUP
+Let’s knock this out piece by piece:
+
+🎬 1. First 3 Video Script Themes
+These are your first 3 signature-style workouts — short scripts to guide how you’ll talk, coach, and keep energy high on video. You can film these in any order.
+
+1. "GET UP & GRIND" – Full Body Wake-Up (Beginner Friendly)
+Duration: 15–20 mins
+
+Vibe: High energy, no excuses, positive tone
+
+Intro Script:
+
+“Yo! Welcome to Get Up & Grind! It’s your boy Kevin and today we gettin’ our mind right and our body movin’. You ain’t gotta be perfect — you just gotta show up. Let’s go!”
+
+Moves Example:
+
+Arm circles
+
+Bodyweight squats
+
+Push-ups
+
+Step jacks
+
+Plank taps
+
+Outro Script:
+
+“You did that. You ain’t gotta go hard every day — just don’t go missing. Now go drink some water, breathe deep, and carry that power into your day.”
+
+2. "MILITARY MODE: BOOTCAMP GRIT" – Lower Body + Core
+Duration: 25–30 mins
+
+Vibe: Drill Sergeant meets Hype Man
+
+Intro Script:
+
+“Fall in! This is Military Mode, baby. We trainin’ legs and grit — so if you ain’t ready to sweat, you better hit exit now. Let’s lock in!”
+
+Moves Example:
+
+Jump squats
+
+Wall sits
+
+Lunges
+
+Mountain climbers
+
+Russian twists
+
+Outro Script:
+
+“That’s it, soldier. You just leveled up. Same time next mission — don’t leave that energy behind.”
+
+3. "SUNDAY STRETCH + SELF-TALK" – Recovery & Mental Reset
+Duration: 15 mins
+
+Vibe: Calm, meditative, motivational
+
+Intro Script:
+
+“Sometimes, what we need ain’t more pressure — it’s more presence. Today we slow it down, stretch it out, and speak life into our mind.”
+
+Content:
+
+Hip openers
+
+Chest stretch
+
+Forward fold
+
+Breathing exercises
+
+Kevin’s affirmations
+
+Outro Script:
+
+“That’s how you recharge with purpose. Respect your rest — it's part of the grind.”
+
+🧱 2. Layout Design – Workout With Kevin Section
+Screens in This Section:
+
+Screen	Features
+“Workout with Kevin” Home	- Header image of you in action
+- Category buttons: “Full Body”, “Lower Body”, “Mindset”, “Recovery”, “New This Week”
+- Paid content indicator (locked icon if not subscribed)
+Video Page	- Video player at top
+- Short description
+- Timer + rep breakdown
+- “Play Music While You Train” toggle
+- “Mark as Complete” button
+Video Upload (Admin Panel)	- You log in, upload your video
+- Add thumbnail, name, type, duration
+- Tag it (Body Part / Energy / Level)
+Let me generate a mockup of this layout using placeholder images — I’ll include you in the graphics shortly.
+
+🧢 3. Branding Prep
+I Need From You (or I can help create if not ready):
+
+✅ Your logo file
+
+✅ A photo of you posing or mid-workout (can be casual, we’ll use for mockups)
+
+✅ Preferred brand colors (or I can pick based on vibe)
+
+Once I have that, I’ll:
+
+Create app mockups featuring your face/logo
+
+Add your brand to the workout thumbnails
+
+Make a branded splash screen intro for every workout
+
+🛠️ 4. Technical Upload & Access Flow (For Developer)
+Step	Tool	Description
+Video Hosting	Vimeo Pro or AWS S3	You upload here, embedded in-app
+In-App Section	FlutterFlow / Adalo (no-code)	Create “Workout with Kevin” tab
+Access Control	Stripe / Firebase Auth	Paid users only access video area
+🛍 BONUS: “Kevin’s Corner” Merch Tab (Sneak Peek Plan)
+Banner that says: “Want to rep the grind? Grab your gear!”
+
+Merch tiles: Hoodie, tee, hat, etc.
+
+Built-in Printify store link
+
+Exclusive merch only for premium members
+
+🚀 YOUR ACTION LIST:
+Send me:
+
+Your logo
+
+✅ Absolutely, Kevin. You’ll have a one-button upload system — real simple, no tech stress. Here's how we're building it to work for you, not the other way around:
+
+📲 YOUR BACK-END DASHBOARD (Coach Upload Control Panel)
+💡 Purpose:
+You log in → Upload your video/image → Tap where it goes → BOOM, it’s live in the app.
+
+🔧 How It Will Work
+🖥️ Step 1: You Log Into Your Private Admin Panel
+Mobile & desktop friendly
+
+Simple layout: no-code vibes, clean and fast
+
+📤 Step 2: You Choose What You’re Uploading
+Upload Type	What It Does
+📹 Training Video	Goes into the “Workout With Kevin” section. Pick category: full-body, lower body, recovery, etc.
+🖼️ Image w/ Instructions	Adds to the Body Part Workout Library (e.g. chest > incline push-up)
+🔈 Voiceover Option	You can record or upload a short voice clip to describe the image (for blind-accessibility mode)
+📁 Step 3: Choose Where It Goes
+Option	Action
+✅ Workout With Kevin	Add it to your video workout library
+✅ Daily Tips / Quote	Send it to the front page for motivational drops
+✅ Body Part Workout Library	Attach to a specific muscle group & workout
+✅ Blind Audio Coaching Section	Adds it to the guided audio library with description
+🏷️ Step 4: Tag & Publish
+You’ll just:
+
+Give it a title (like: “Explosive Leg Day”)
+
+Pick tags (Beginner, Core, Stretch, etc.)
+
+Set visibility (Free or Paid)
+
+Hit “✅ Publish”
+
+And it shows up INSTANTLY in the app. No delays. No dev needed.
+
+🔈 AUDIO READ-ALOUD: For Accessibility
+Every time you upload:
+
+You can type a workout description, and it’ll auto-convert to speech using a realistic voice (or your own voice clip)
+
+It will automatically be read aloud in Blind Mode during the workout
+
+🔐 For Paid Workouts:
+You’ll see a toggle like:
+
+“🔒 Add to Pro/Elite Only?” → Yes
+
+That locks it behind your paid content. The app handles the access control.

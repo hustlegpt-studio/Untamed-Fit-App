@@ -1,0 +1,89 @@
+I need you to fix and verify the following issues across the entire Untamed Fit app. 
+Make all changes necessary in all relevant files.
+
+===========================
+1. SPLASH SCREEN FIXES
+===========================
+• Splash screen must stay visible for 7 seconds.
+• After 7 seconds, the logo becomes tappable/clickable.
+• User must tap the logo to continue.
+• Remove any auto-redirects from the splash screen.
+• After tapping the logo, navigate to /auth.
+
+===========================
+2. AUTH SCREEN FIXES
+===========================
+• The Auth page must ALWAYS show:
+  - Email input
+  - Password input
+  - Login button
+  - Signup button
+• Fix any logic that hides the login/signup UI.
+• Ensure the Auth page is reachable after splash.
+
+===========================
+3. LOGOUT FIX
+===========================
+• Fix logoutUser() so it clears the active user.
+• After logout, redirect to /auth.
+• Ensure logout button works everywhere.
+
+===========================
+4. OWNER EMAIL FIX
+===========================
+• Set the owner email to:
+    untamedfitapp@gmail.com
+• Update isOwner() to use this email.
+• Remove any old or random owner email values.
+
+===========================
+5. ROUTING & REDIRECT FIXES
+===========================
+• /auth should show Auth page if NOT logged in.
+• /auth should redirect to /dashboard if logged in.
+• /goals-setup should load normally after login.
+• /body-type-setup must be accessible after goals.
+• /dashboard must load after body type setup.
+• Remove any incorrect redirects that skip onboarding.
+
+===========================
+6. ONBOARDING FLOW FIXES
+===========================
+• GoalsSetup must save goals to the user profile.
+• BodyTypeSetup must save body type + attributes.
+• After BodyTypeSetup, redirect to /dashboard.
+• Ensure both pages load correctly and are not blocked.
+
+===========================
+7. UNTAMED STUDIO ACCESS FIX
+===========================
+• Only the owner should see the sidebar link.
+• Only the owner should access /untamed-studio.
+• Non-owners must be redirected to /dashboard.
+
+===========================
+8. VERIFY EVERYTHING WORKS
+===========================
+After applying all fixes, verify:
+
+• Splash screen → tap logo → Auth page
+• Signup works
+• Login works
+• Logout works
+• GoalsSetup loads and saves
+• BodyTypeSetup loads and saves
+• Dashboard loads
+• ProfileSettings loads and saves
+• Untamed Studio appears ONLY for owner
+• Untamed Studio saves videos correctly
+• Train With Kevin page loads videos
+
+===========================
+IMPORTANT
+===========================
+Do NOT remove any existing features.
+Do NOT break any existing pages.
+Do NOT change the design or styling.
+Just fix the logic, routing, and access control.
+
+Make all necessary code changes now.

@@ -1,0 +1,112 @@
+====================================================
+MICRO‑CHUNK F — UNTAMED STUDIO (OWNER VIDEO SYSTEM)
+====================================================
+
+Goal:
+Create the Untamed Studio page where ONLY the owner can upload and manage training videos.
+
+====================================================
+STEP 1 — CREATE NEW PAGE
+====================================================
+
+Create:
+  /pages/UntamedStudio.tsx
+
+This page should include:
+
+- Title: “Untamed Studio”
+- Subtitle: “Owner Video Management Console”
+- A check to ensure ONLY the owner can access it
+- A simple form with:
+   - Video Title
+   - Category (dropdown)
+   - Video Type (Upload or Embed)
+   - File input (if Upload)
+   - URL input (if Embed)
+- A “Save Video” button
+
+====================================================
+STEP 2 — OWNER ACCESS LOGIC
+====================================================
+
+In auth.ts, add:
+
+export function isOwner() {
+  const email = getActiveUser();
+  return email === "YOUR_OWNER_EMAIL_HERE";
+}
+
+Replace YOUR_OWNER_EMAIL_HERE with your real owner email.
+
+====================================================
+STEP 3 — PROTECT THE PAGE
+====================================================
+
+In UntamedStudio.tsx:
+
+If NOT isOwner():
+  Redirect to /dashboard
+  OR show “Access Denied”
+
+====================================================
+STEP 4 — VIDEO STORAGE (LOCALSTORAGE)
+====================================================
+
+In /utils/videos.ts create:
+
+export function saveVideo(video) {
+  const videos = JSON.parse(localStorage.getItem("untamedVideos") || "[]");
+  videos.push(video);
+  localStorage.setItem("untamedVideos", JSON.stringify(videos));
+}
+
+export function getVideos() {
+  return JSON.parse(localStorage.getItem("untamedVideos") || "[]");
+}
+
+====================================================
+STEP 5 — SAVE VIDEO LOGIC
+====================================================
+
+When owner clicks “Save Video”:
+
+1. Build a video object:
+   {
+     id: crypto.randomUUID(),
+     title,
+     category,
+     type, // upload or embed
+     url,  // embed URL or local file URL
+     createdAt: new Date().toISOString()
+   }
+
+2. Call saveVideo(video)
+
+3. Show success message:
+   “Video saved to Untamed Studio.”
+
+====================================================
+STEP 6 — SIDEBAR LINK (OWNER ONLY)
+====================================================
+
+In Layout.tsx:
+
+If isOwner():
+  Show sidebar link:
+    “Untamed Studio”
+
+Link to:
+  /untamed-studio
+
+====================================================
+DO NOT ADD VIDEO PLAYER OR CATEGORY FILTERS YET
+====================================================
+
+This micro‑chunk ONLY adds:
+- Untamed Studio page
+- Owner access protection
+- Video upload/embed form
+- LocalStorage video saving
+- Sidebar link (owner only)
+
+Begin building now.

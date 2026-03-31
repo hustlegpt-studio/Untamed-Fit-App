@@ -1,0 +1,127 @@
+====================================================
+MICRO‑CHUNK D — WORKOUT LOGGING SYSTEM
+====================================================
+
+Goal:
+Create a system that logs every workout session automatically when the stopwatch ends.
+
+This includes:
+- Workout name
+- Body part
+- Reps
+- Sets
+- Duration (from stopwatch)
+- Date
+- Time
+- User’s weight at time of workout
+- Placeholder calories burned
+
+====================================================
+STEP 1 — CREATE WORKOUT LOG STORAGE
+====================================================
+
+Create a new file:
+  /utils/workoutLogger.js
+
+Inside it, create:
+
+let workoutHistory = [];
+
+export function logWorkoutSession(session) {
+  workoutHistory.push(session);
+}
+
+export function getWorkoutHistory() {
+  return workoutHistory;
+}
+
+export function clearWorkoutHistory() {
+  workoutHistory = [];
+}
+
+====================================================
+STEP 2 — DEFINE WORKOUT SESSION STRUCTURE
+====================================================
+
+A session object should look like:
+
+{
+  id: crypto.randomUUID(),
+  workoutName: "",
+  bodyPart: "",
+  reps: 0,
+  sets: 0,
+  duration: 0, // seconds from stopwatch
+  date: "YYYY-MM-DD",
+  time: "HH:MM",
+  userWeight: 0,
+  calories: 0 // placeholder
+}
+
+====================================================
+STEP 3 — CONNECT STOPWATCH TO LOGGER
+====================================================
+
+In StopWatchBox.jsx:
+
+When the stopwatch stops (onReset or onStop event):
+
+1. Import:
+   import { logWorkoutSession } from "../utils/workoutLogger";
+
+2. Gather data from:
+   - Current workout (from WorkoutPreview)
+   - Stopwatch duration
+   - Current date/time
+   - Placeholder user weight (use 0 for now)
+
+3. Create a session object and call:
+   logWorkoutSession(session);
+
+====================================================
+STEP 4 — ADD CONFIRMATION MESSAGE
+====================================================
+
+After logging a workout, show a small message under the stopwatch:
+
+"Workout logged successfully."
+
+====================================================
+STEP 5 — ADD WORKOUT HISTORY PAGE (PLACEHOLDER)
+====================================================
+
+Create a new page:
+  /pages/WorkoutHistory.jsx
+
+Inside it, display:
+
+- A simple list of logged workouts
+- For each workout:
+  - Name
+  - Date
+  - Duration
+  - Reps/Sets
+
+Use:
+import { getWorkoutHistory } from "../utils/workoutLogger";
+
+====================================================
+STEP 6 — ADD SIDEBAR LINK
+====================================================
+
+Add a new sidebar item:
+"Workout History"
+
+Link it to /pages/WorkoutHistory.jsx
+
+====================================================
+DO NOT BUILD THE CALENDAR UI YET
+====================================================
+
+This micro‑chunk ONLY builds:
+- Logging system
+- Storage
+- Stopwatch → logger connection
+- Basic history page
+
+Begin building now.

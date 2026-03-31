@@ -1,0 +1,250 @@
+You are building a complete React + Vite web application called **Untamed Fit**.  
+This app must be structured so it can later be wrapped into desktop apps (Electron/Tauri) and mobile apps (Capacitor).  
+Build the full project skeleton, file structure, routing, components, pages, and placeholder logic for all features listed below.
+
+====================================================
+APP IDENTITY & BRANDING
+====================================================
+
+APP NAME: Untamed Fit  
+CREATOR: Kevin Gilliam  
+ENGINEER: TMG Rambo  
+BUILT WITH: HustleBuilder™ (HustleGPT Family)
+
+Use a clean, modern, fitness‑focused UI with dark mode as the default.  
+Primary colors:  
+- #0D0D0D (charcoal black)  
+- #00FF7A (electric green)  
+- #FF7A00 (burnt orange)  
+- #CFCFCF (silver)  
+
+Include a global theme system so colors can be changed later.
+
+====================================================
+SPLASH SCREEN (INTRO SCREEN)
+====================================================
+
+Create a full‑screen splash component that loads every time the app opens.
+
+BACKGROUND:
+- Use a placeholder for an uploaded image called: **KG_INTRO_01**
+- Apply: 10% blur, 50% black overlay, soft vignette, subtle green‑orange tint
+- Keep Kevin’s silhouette visible but softened
+
+CENTER CONTENT:
+- Large centered logo placeholder: **UNTAMED_LOGO**
+- Under it, show a rotating motto chosen randomly from this list:
+  - "Unleash Your Strongest Self"
+  - "Train Untamed. Live Untamed."
+  - "Built Not Born"
+  - "Rise Strong"
+  - "No Excuses. Just Results."
+  - "Your Power Starts Here"
+  - (Reserve a slot for Kevin’s personal motto)
+
+BOTTOM CREDITS (small, 60% opacity):
+Created by Kevin Gilliam  
+Built with HustleBuilder™ (HustleGPT Family)  
+Engineered by TMG Rambo  
+
+After 2.5 seconds, fade into the Home screen.
+
+====================================================
+GLOBAL NAVIGATION
+====================================================
+
+Create a navigation system with these pages:
+
+- Home
+- Ask Kevin (AI Chat)
+- Train by Body Part
+- Weekly Challenges
+- Workout With Kevin (Premium Video Section)
+- Merch Shop
+- Progress Tracker
+- Settings
+- Accessibility Mode (Blind Mode)
+
+Use React Router for navigation.
+
+====================================================
+HOME SCREEN
+====================================================
+
+Home screen layout:
+- Motivational quote area (placeholder)
+- Kevin image placeholder: **KG_HOME_01**
+- Four main buttons:
+  1. Ask Kevin (AI Chat)
+  2. Train by Body Part
+  3. Weekly Challenges
+  4. Merch Shop
+- Bottom brand bar with UNTAMED logo
+
+====================================================
+AI CHAT (ASK KEVIN)
+====================================================
+
+Create a full page with:
+- Chat UI
+- Input box
+- Placeholder function for GPT API
+- Limit free users to 3–5 questions/day
+- Show upgrade prompt when limit is reached
+
+====================================================
+WORKOUT LIBRARY (BODY PART)
+====================================================
+
+Create a page with categories:
+- Chest
+- Back
+- Arms
+- Shoulders
+- Legs
+- Core
+- Full Body
+
+Each category opens a swipeable “flip book” style workout viewer:
+- Placeholder images for exercises
+- Placeholder text instructions
+- Placeholder voice guidance toggle
+
+====================================================
+BLIND ACCESSIBILITY MODE
+====================================================
+
+Create a separate mode that activates when toggled:
+- All text becomes spoken aloud (placeholder TTS)
+- Large buttons
+- Voice navigation prompts
+- Workouts read aloud step‑by‑step
+
+====================================================
+WORKOUT WITH KEVIN (PREMIUM VIDEO SECTION)
+====================================================
+
+Create a premium‑locked section with:
+- Video grid layout
+- Placeholder thumbnails
+- Placeholder video player
+- Categories:
+  - Full Body
+  - Upper Body
+  - Lower Body
+  - Cardio
+  - Recovery
+  - Motivation
+- Subscription paywall placeholder
+
+====================================================
+CHALLENGES SYSTEM
+====================================================
+
+Create a page with:
+- Weekly challenge card
+- Progress bar
+- “Complete challenge to unlock rewards”
+- Placeholder leaderboard
+- Placeholder reward logic
+
+====================================================
+MERCH SHOP
+====================================================
+
+Create a page that loads a WebView/iFrame placeholder for a Printify storefront.
+
+====================================================
+PROGRESS TRACKER
+====================================================
+
+Create a page with:
+- Weight log
+- Workout completion log
+- Photo upload placeholder
+- Limited features for free users
+
+====================================================
+SOUND ENGINE (GYM AMBIENCE)
+====================================================
+
+Create a global audio system with:
+- Toggle ON/OFF
+- Volume slider
+- Sound pack selector
+- Placeholder audio files:
+  - weights_clank.mp3
+  - treadmill.mp3
+  - jump_rope.mp3
+  - sled_push.mp3
+  - battle_ropes.mp3
+  - gym_echo.mp3
+  - gym_chatter.mp3
+
+When voice prompts play, music should “duck” (lower volume).
+
+====================================================
+MUSIC COMPATIBILITY
+====================================================
+
+Ensure the app:
+- Does NOT interrupt background music
+- Allows voice prompts to duck music
+- Has a toggle for “mute voice cues”
+- Includes placeholder for future HustleMusic integration
+
+====================================================
+SETTINGS PAGE
+====================================================
+
+Include:
+- Theme selector
+- Sound engine controls
+- Voice cue toggle
+- Blind mode toggle
+- Account settings
+- Subscription status
+- About section with credits
+
+====================================================
+IMAGE PLACEHOLDERS
+====================================================
+
+Create a folder `/assets/placeholders/` with:
+- KG_INTRO_01
+- KG_HOME_01
+- UNTAMED_LOGO
+- Additional placeholders for future uploads
+
+====================================================
+FILE STRUCTURE
+====================================================
+
+Use a clean, scalable structure:
+
+src/
+  components/
+  pages/
+  hooks/
+  context/
+  assets/
+  styles/
+  utils/
+  App.jsx
+  main.jsx
+
+====================================================
+FINAL REQUIREMENTS
+====================================================
+
+- Build ALL pages, components, routes, and placeholders now.
+- Do NOT leave anything out.
+- Use clean, modern UI.
+- Use responsive design.
+- Prepare all components so images can be swapped in later.
+- Prepare all audio/video placeholders.
+- Prepare all premium/free logic placeholders.
+- Prepare all accessibility placeholders.
+- Prepare all branding elements.
+
+Begin building the full project now.

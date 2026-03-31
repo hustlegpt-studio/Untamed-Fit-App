@@ -1,0 +1,124 @@
+Update the Ask Kevin page and build the new AI Trainer system.
+
+====================================================
+ASK KEVIN PAGE — NEW LAYOUT & BRANDING
+====================================================
+
+1. Replace the AI robot avatar with the Untamed Fit logo.
+2. Change the page title from “Ask Kevin (AI Coaching)” to:
+   Coaching from KG
+3. Keep the main AI chat panel the same size.
+4. Make the page vertically scrollable.
+
+====================================================
+ADD WORKOUT PREVIEW BOX
+====================================================
+
+Create a large box directly UNDER the AI chat panel.
+
+Name: Workout Preview
+
+Features:
+- Displays an image or animated GIF of the workout Kevin recommends.
+- Pulls workouts based on the user’s body type profile (placeholder for now).
+- Shows:
+  - Workout name
+  - Body part
+  - Reps
+  - Sets
+  - Difficulty
+- Add placeholder animated GIFs for:
+  - Squats
+  - Deadlifts
+  - Bench press
+  - Shoulder press
+  - Rows
+  - Lunges
+  - Planks
+  - Bicep curls
+  - Tricep dips
+  - Neck mobility
+  - Core twists
+  - Stretching animations
+
+====================================================
+ADD STOPWATCH BOX
+====================================================
+
+Create a second box to the RIGHT of the Workout Preview box.
+
+Name: Stop Watch
+
+Design:
+- Styled like a football scoreboard clock.
+- LED-style numbers.
+- User can change LED color (green, orange, white).
+- Buttons:
+  - Start
+  - Pause
+  - Reset
+- Timer automatically starts when Kevin says a “start phrase.”
+
+====================================================
+AI TRAINER LOGIC (PLACEHOLDER)
+====================================================
+
+Add logic so that when the user says:
+“I’m ready”
+or
+“Yes”
+or
+“Let’s start”
+
+The AI responds with a motivational line from the dashboard quotes and triggers:
+
+- Start the stopwatch automatically.
+- Load a workout into the Workout Preview box.
+
+====================================================
+AI TRAINER NAME CHANGE
+====================================================
+
+Everywhere the AI is referenced on this page:
+Change name to: Trainer Kevin
+
+====================================================
+PAGE STRUCTURE
+====================================================
+
+Final layout order:
+
+[ AI Chat Panel ]
+(scroll down)
+[ Workout Preview Box ]   [ Stop Watch Box ]
+
+Make sure the page scrolls smoothly.
+
+====================================================
+SIDEBAR UPDATE
+====================================================
+
+Change sidebar label:
+Ask Kevin → Coaching from KG
+
+====================================================
+FILE STRUCTURE
+====================================================
+
+Create new components:
+- /components/WorkoutPreview.jsx
+- /components/StopWatchBox.jsx
+- /utils/workoutData.js (placeholder workout list)
+- /utils/startPhrases.js (phrases that trigger stopwatch)
+
+====================================================
+DO NOT TOUCH ANY OTHER PAGES YET
+====================================================
+
+Only update:
+- Ask Kevin page
+- Sidebar label
+- Add new components
+- Add placeholder logic
+
+Begin building now.

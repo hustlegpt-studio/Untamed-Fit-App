@@ -1,0 +1,83 @@
+====================================================
+MICRO‑CHUNK C — WORKOUT IMAGE GENERATION SYSTEM
+====================================================
+
+Goal:
+Set up the structure for generating workout images and saving them permanently inside the app.
+
+This micro‑chunk DOES NOT integrate real AI yet.
+It only creates:
+- File structure
+- Placeholder functions
+- UI buttons for generating and saving images
+- Logic for storing images in /assets/workouts/
+
+====================================================
+STEP 1 — CREATE WORKOUT ASSETS FOLDER
+====================================================
+
+Create a new folder:
+  /assets/workouts/
+
+Inside it, add a placeholder file:
+  placeholder.png
+
+====================================================
+STEP 2 — CREATE IMAGE GENERATION SERVICE
+====================================================
+
+Create a new file:
+  /utils/imageGenerator.js
+
+Inside it, create placeholder functions:
+
+export async function generateWorkoutImage(workoutName) {
+  // Placeholder: return a static placeholder image path for now
+  return "/assets/workouts/placeholder.png";
+}
+
+export async function saveGeneratedImage(imageBlob, fileName) {
+  // Placeholder: simulate saving by returning a path
+  return `/assets/workouts/${fileName}`;
+}
+
+====================================================
+STEP 3 — ADD IMAGE GENERATION BUTTON TO WORKOUT PREVIEW
+====================================================
+
+In WorkoutPreview.jsx:
+
+Add a small button under the workout name:
+
+[ Generate Workout Image ]
+
+When clicked:
+1. Call generateWorkoutImage(workout.name)
+2. Display the returned image in the preview box
+3. Save the image path to the workout object
+
+====================================================
+STEP 4 — CONNECT TO WORKOUT ENGINE
+====================================================
+
+When recommendWorkout() returns a workout:
+
+If workout.image exists:
+  Display it
+
+If workout.image does NOT exist:
+  Display placeholder.png
+  Show the "Generate Workout Image" button
+
+====================================================
+STEP 5 — DO NOT ADD REAL AI YET
+====================================================
+
+This micro‑chunk ONLY sets up:
+- Folder structure
+- Placeholder generator
+- Save function
+- UI button
+- Logic to display generated images
+
+Begin building now.

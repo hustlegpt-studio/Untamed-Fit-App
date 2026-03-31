@@ -1,0 +1,95 @@
+I need you to upgrade the KG’s Playlists page into a premium, Spotify-style music section inside the Untamed Fit app.  
+Do NOT modify any playlist URLs.  
+Only upgrade the UI and layout.
+
+===========================
+1. HERO BANNER (TOP SECTION)
+===========================
+Create a full-width hero banner at the top of the page with:
+
+• Full-bleed blurred background image  
+  - Use the Untamed Fitness playlist cover image as the background  
+• A sharp version of the same cover floating in front  
+• Title: “KG’s Playlists”  
+• Subtitle: “Curated mixes to fuel your grind.”  
+• Electric green neon glow around the hero card  
+• Smooth fade-in + slide-up animation (Framer Motion)  
+• Dark charcoal overlay for readability  
+
+This should look like a premium streaming service header.
+
+===========================
+2. PLAYLIST GRID (MAIN SECTION)
+===========================
+Below the hero banner, create a responsive grid of playlist cards.
+
+Each playlist card must include:
+
+• Charcoal glass panel background  
+• Electric green neon border  
+• Dynamic blurred background using the playlist cover  
+• Sharp playlist cover image centered on the card  
+• Floating neon-green play button  
+• Title of the playlist  
+• Energy meter (🔥 icons, 1–5 flames)  
+• “Best for:” workout type tags  
+• Total playlist length (e.g., “2h 14m”)  
+• Smooth hover animation:
+   - Slight scale-up
+   - Neon border pulse
+   - 3D cube rotation effect on hover (CSS transform)
+
+===========================
+3. PREMIUM BADGE (UNTAMED FITNESS PLAYLIST ONLY)
+===========================
+For the Untamed Fitness playlist:
+
+• Add a gold “PREMIUM” badge in the top-right corner  
+• Add a small lock icon for free users  
+• Premium users see it unlocked  
+• Do NOT change the playlist URL  
+
+===========================
+4. CATEGORY SECTIONS (OPTIONAL BUT RECOMMENDED)
+===========================
+Group playlists into horizontal scroll sections:
+
+• Intensity Boosters  
+• Mindset & Focus  
+• Cardio Killers  
+• Untamed Signature Mixes  
+
+Each section should scroll horizontally like Netflix.
+
+===========================
+5. SIDEBAR INTEGRATION
+===========================
+Ensure the sidebar link “KG’s Playlists” opens this upgraded page.
+
+===========================
+6. DO NOT MODIFY PLAYLIST LINKS
+===========================
+All playlist URLs must remain EXACTLY as they are now.
+
+===========================
+7. VERIFY FUNCTIONALITY
+===========================
+After implementing the UI:
+
+• Hero banner displays correctly  
+• All playlist cards show correctly  
+• Hover animations work  
+• Energy meters display  
+• Workout tags display  
+• Premium badge displays on the correct playlist  
+• Sidebar link works  
+• No broken imports or routing issues  
+
+===========================
+IMPORTANT
+===========================
+Do NOT remove any existing features.  
+Do NOT change playlist URLs.  
+Only upgrade the UI and layout.
+
+Make all necessary code changes now.

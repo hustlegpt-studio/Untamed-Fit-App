@@ -1,0 +1,101 @@
+====================================================
+MICRO‑CHUNK E — CALENDAR UI + DAILY WORKOUT JOURNAL
+====================================================
+
+Goal:
+Create a full calendar page where users can click any day and see the workouts logged on that date.
+
+This will use the existing workoutLogger system from Micro‑Chunk D.
+
+====================================================
+STEP 1 — CREATE CALENDAR PAGE
+====================================================
+
+Create a new page:
+  /pages/WorkoutCalendar.jsx
+
+This page should include:
+
+1. A month-view calendar grid (7 columns × 5–6 rows)
+2. Each day cell should show:
+   - The date number
+   - A small dot or icon if workouts exist on that day
+
+3. When a user clicks a day:
+   - Show a panel on the right (or below on mobile)
+   - Display all workouts logged on that date
+
+====================================================
+STEP 2 — IMPORT WORKOUT HISTORY
+====================================================
+
+Inside WorkoutCalendar.jsx:
+
+import { getWorkoutHistory } from "../utils/workoutLogger";
+
+Use this to:
+- Group workouts by date
+- Mark days that have workouts
+
+====================================================
+STEP 3 — BUILD CALENDAR LOGIC
+====================================================
+
+Calendar should:
+
+- Automatically detect current month and year
+- Generate correct number of days
+- Align days to correct weekday (Mon–Sun or Sun–Sat)
+- Highlight today’s date
+
+====================================================
+STEP 4 — DAILY WORKOUT PANEL
+====================================================
+
+When a day is clicked:
+
+Show a panel with:
+
+- Workout name
+- Body part
+- Reps × sets
+- Duration
+- Calories
+- Time performed
+
+If no workouts exist:
+Show: “No workouts logged for this day.”
+
+====================================================
+STEP 5 — ADD SIDEBAR LINK
+====================================================
+
+Add a new sidebar item:
+"Workout Calendar"
+
+Link it to /pages/WorkoutCalendar.jsx
+
+====================================================
+STEP 6 — OPTIONAL UI DETAILS
+====================================================
+
+Add:
+- Hover highlight on calendar days
+- Smooth animation when switching selected day
+- Color-coded dots:
+   - Green = strength workouts
+   - Blue = cardio
+   - Yellow = mobility/stretching
+
+====================================================
+STEP 7 — DO NOT ADD MONTH SWITCHING YET
+====================================================
+
+This micro‑chunk ONLY builds:
+- Calendar grid
+- Clickable days
+- Daily workout panel
+- Integration with workoutLogger
+- Sidebar link
+
+Begin building now.

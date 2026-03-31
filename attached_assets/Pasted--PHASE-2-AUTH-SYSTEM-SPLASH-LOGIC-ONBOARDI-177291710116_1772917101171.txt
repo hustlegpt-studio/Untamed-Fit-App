@@ -1,0 +1,190 @@
+====================================================
+PHASE 2 — AUTH SYSTEM + SPLASH LOGIC + ONBOARDING
+====================================================
+
+You will now expand the app with a full authentication system, onboarding flow, goals setup, body type setup, and trainer-style workout explanations.
+
+DO NOT modify the Ask Kevin page from Phase 1. Only add new pages and update navigation.
+
+====================================================
+SPLASH SCREEN UPDATE
+====================================================
+
+Modify the splash screen behavior:
+
+1. Splash screen stays visible until the user taps/clicks the logo.
+2. After clicking the logo, navigate to the new Login page.
+
+====================================================
+LOGIN / SIGNUP SYSTEM
+====================================================
+
+Create a new page: /pages/Auth.jsx
+
+Features:
+- Login with Google (placeholder button)
+- Sign up with Google (placeholder button)
+- Email + Password login
+- Email + Password signup
+- Forgot password (placeholder)
+- All fields optional except email + password for email login
+- After successful login, redirect to the new Goals Setup page
+
+====================================================
+GOALS SETUP PAGE
+====================================================
+
+Create a new page: /pages/GoalsSetup.jsx
+
+Ask the user:
+“What are your fitness goals?”
+
+Provide selectable options:
+- Lose weight
+- Build muscle
+- Tone up
+- Increase strength
+- Improve endurance
+- Improve flexibility
+- Build a routine
+- Get a diet plan
+- Improve mobility
+- Gain weight
+- Maintain current physique
+- Reduce body fat
+- Improve cardio health
+- Recover from injury (placeholder)
+- Custom goal (text input)
+
+User can select multiple.
+
+Add a “Continue” button → goes to Body Type Setup.
+
+====================================================
+BODY TYPE SETUP PAGE
+====================================================
+
+Create a new page: /pages/BodyTypeSetup.jsx
+
+Features:
+- Interactive body type selector
+- Show stylized illustrated body types:
+  - Slim
+  - Athletic
+  - Muscular
+  - Heavyset
+  - Curvy
+  - Plus-size
+  - Broad shoulders
+  - Narrow shoulders
+  - Tall
+  - Short
+  - Average
+
+User selects:
+- Height
+- Weight
+- Age
+- Gender (optional)
+- Body type image
+- Favorite foods (multi-select)
+- Foods they dislike
+- Allergies
+- Dietary preference:
+  - Regular
+  - Vegetarian
+  - Vegan
+  - High protein
+  - Low carb
+  - Keto
+  - Mediterranean
+  - Custom
+
+After completion → Save profile → Redirect to Dashboard.
+
+====================================================
+USER PROFILE EXPANSION
+====================================================
+
+In Settings → User Profile:
+
+Add optional fields:
+- Name
+- Username
+- Address
+- City
+- State
+- Country
+- Age
+- DOB
+- Height
+- Weight
+- Body type
+- Dietary preferences
+- Favorite foods
+- Allergies
+- Fitness goals
+- Emergency contact (optional)
+
+All fields optional.
+
+====================================================
+TRAINER-STYLE WORKOUT EXPLANATIONS
+====================================================
+
+Update the Workout Preview component:
+
+Under each workout, add a new section:
+
+“Trainer Kevin’s Step-by-Step Instructions”
+
+Provide placeholder text for now:
+- Step 1: Explain the setup
+- Step 2: Explain correct form
+- Step 3: Explain breathing
+- Step 4: Explain tempo
+- Step 5: Explain common mistakes
+- Step 6: Explain how to know you’re doing it right
+
+Example placeholder:
+“Stand with your feet shoulder-width apart. Keep your chest up, core tight, and drive through your heels as you lower into the movement…”
+
+====================================================
+DASHBOARD REDIRECT
+====================================================
+
+After onboarding (Goals → Body Type), redirect to Dashboard.
+
+====================================================
+SIDEBAR UPDATE
+====================================================
+
+Add new sidebar items:
+- Goals Setup
+- Body Type Setup
+
+====================================================
+FILE STRUCTURE
+====================================================
+
+Create:
+- /pages/Auth.jsx
+- /pages/GoalsSetup.jsx
+- /pages/BodyTypeSetup.jsx
+- /components/BodyTypeCard.jsx
+- /components/GoalOption.jsx
+- /utils/bodyTypes.js
+- /utils/goalsList.js
+
+====================================================
+IMPORTANT
+====================================================
+
+Do NOT modify:
+- Ask Kevin page
+- Stopwatch
+- Workout Preview layout
+
+Only add new pages and update navigation.
+
+Begin building now.

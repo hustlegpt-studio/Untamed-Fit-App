@@ -1,0 +1,115 @@
+====================================================
+MICRO‑CHUNK B — BODY‑TYPE‑BASED WORKOUT ENGINE
+====================================================
+
+Create a new file:
+  /utils/workoutEngine.js
+
+This file will contain the logic for recommending workouts based on:
+- Body type
+- User goals
+- Selected body part
+- Experience level (placeholder)
+- Safety considerations
+
+====================================================
+STEP 1 — CREATE WORKOUT DATABASE (PLACEHOLDER)
+====================================================
+
+Inside workoutEngine.js, create a constant called WORKOUT_LIBRARY.
+
+Structure example:
+
+{
+  legs: [
+    {
+      id: "bodyweight_squat",
+      name: "Bodyweight Squat",
+      difficulty: "beginner",
+      equipment: "none",
+      reps: { beginner: 8, intermediate: 12, advanced: 15 },
+      sets: 3,
+      image: "/assets/workouts/bodyweight_squat.png",
+      gif: "/assets/workouts/bodyweight_squat.gif",
+      safeFor: ["heavyset", "slim", "athletic", "plus-size", "curvy"],
+    },
+    {
+      id: "goblet_squat",
+      name: "Goblet Squat",
+      difficulty: "intermediate",
+      equipment: "dumbbell",
+      reps: { beginner: 8, intermediate: 12, advanced: 15 },
+      sets: 4,
+      image: "/assets/workouts/goblet_squat.png",
+      gif: "/assets/workouts/goblet_squat.gif",
+      safeFor: ["athletic", "muscular"],
+    }
+  ],
+
+  chest: [...],
+  back: [...],
+  arms: [...],
+  shoulders: [...],
+  core: [...],
+  fullbody: [...],
+  mobility: [...],
+  stretching: [...]
+}
+
+Use placeholder workouts for now.
+
+====================================================
+STEP 2 — CREATE RECOMMENDATION FUNCTION
+====================================================
+
+Export a function:
+
+export function recommendWorkout(bodyPart, userProfile) { ... }
+
+Inputs:
+- bodyPart (string)
+- userProfile (object containing bodyType, goals, weight, age, etc.)
+
+Logic:
+1. Filter WORKOUT_LIBRARY[bodyPart] by workouts that include userProfile.bodyType in their safeFor array.
+2. If none match, fall back to beginner-safe workouts.
+3. Choose a workout based on:
+   - userProfile.goals
+   - userProfile.experienceLevel (placeholder)
+4. Return:
+   - workout name
+   - reps based on experience level
+   - sets
+   - difficulty
+   - equipment
+   - image path
+   - gif path
+
+====================================================
+STEP 3 — CONNECT TO AI TRAINER FLOW
+====================================================
+
+In the Coaching from KG page:
+
+When the AI detects a body part selection AND after calling getUserFitnessProfile():
+
+Call:
+const workout = recommendWorkout(detectedBodyPart, userProfile);
+
+Then display:
+- workout.name
+- workout.reps
+- workout.sets
+- workout.difficulty
+- workout.image or workout.gif
+
+====================================================
+STEP 4 — DO NOT ADD IMAGE GENERATION YET
+====================================================
+
+This micro-chunk ONLY builds:
+- Workout library structure
+- Recommendation engine
+- Connection to Coaching from KG
+
+Begin building now.

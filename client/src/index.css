@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&family=Oswald:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Oswald', sans-serif;
+  --font-body: 'Montserrat', sans-serif;
+
+  /* Charcoal Black / Dark Mode Default */
+  --background: 0 0% 5%;
+  --foreground: 0 0% 95%;
+  
+  /* Brand Colors */
+  --charcoal: #0D0D0D;
+  --electric-green: #00FF7A;
+  --burnt-orange: #FF7A00;
+  --silver: #CFCFCF;
+
+  /* Charcoal variations for cards/panels */
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 95%;
+  --popover: 0 0% 9%;
+  --popover-foreground: 0 0% 95%;
+  
+  /* Electric Green */
+  --primary: 149 100% 50%;
+  --primary-foreground: 0 0% 5%;
+  
+  /* Silver / Secondary */
+  --secondary: 0 0% 20%;
+  --secondary-foreground: 0 0% 81%;
+  
+  /* Silver Muted */
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 65%;
+  
+  /* Burnt Orange (Premium/Accent) */
+  --accent: 29 100% 50%;
+  --accent-foreground: 0 0% 95%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 95%;
+
+  --border: 0 0% 18%;
+  --input: 0 0% 18%;
+  --ring: 149 100% 50%;
+
+  --radius: 0.75rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-bold tracking-tight uppercase;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-card/80 backdrop-blur-md border border-white/5 shadow-xl;
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 10px hsla(149, 100%, 50%, 0.5);
+  }
+  
+  .box-glow {
+    box-shadow: 0 0 20px hsla(149, 100%, 50%, 0.15);
+  }
+  
+  .premium-glow {
+    box-shadow: 0 0 20px hsla(29, 100%, 50%, 0.2);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
