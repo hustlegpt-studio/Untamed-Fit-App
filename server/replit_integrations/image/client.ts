@@ -1,11 +1,27 @@
 import fs from "node:fs";
-import OpenAI, { toFile } from "openai";
 import { Buffer } from "node:buffer";
 
-export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+// Mock OpenAI client for image generation
+export const openai = {
+  images: {
+    generate: async (options: any) => {
+      // Return a mock response
+      return {
+        data: [{
+          b64_json: Buffer.from("mock image data").toString("base64")
+        }]
+      };
+    },
+    edit: async (options: any) => {
+      // Return a mock response
+      return {
+        data: [{
+          b64_json: Buffer.from("mock edited image data").toString("base64")
+        }]
+      };
+    }
+  }
+};
 
 /**
  * Generate an image and return as Buffer.
@@ -33,22 +49,8 @@ export async function editImages(
   prompt: string,
   outputPath?: string
 ): Promise<Buffer> {
-  const images = await Promise.all(
-    imageFiles.map((file) =>
-      toFile(fs.createReadStream(file), file, {
-        type: "image/png",
-      })
-    )
-  );
-
-  const response = await openai.images.edit({
-    model: "gpt-image-1",
-    image: images,
-    prompt,
-  });
-
-  const imageBase64 = response.data[0]?.b64_json ?? "";
-  const imageBytes = Buffer.from(imageBase64, "base64");
+  // Mock implementation
+  const imageBytes = Buffer.from("mock edited image data");
 
   if (outputPath) {
     fs.writeFileSync(outputPath, imageBytes);

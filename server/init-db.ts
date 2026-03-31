@@ -1,18 +1,19 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "../shared/schema";
 
-// Create database client
-const client = createClient({
-  url: "file:.data/db.sqlite",
-});
+// Create database file if it doesn't exist
+const sqlite = new Database(".data/db.sqlite");
 
-const db = drizzle(client, { schema });
+// Enable foreign keys
+sqlite.pragma('foreign_keys = ON');
+
+export const db = drizzle(sqlite, { schema });
 
 // Create tables manually since drizzle-kit might not be available
 export function initializeDatabase() {
   // Create users table
-  client.execute(`
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL UNIQUE,
@@ -25,7 +26,7 @@ export function initializeDatabase() {
   `);
 
   // Create workouts table
-  client.execute(`
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS workouts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -40,7 +41,7 @@ export function initializeDatabase() {
   `);
 
   // Create progress_logs table
-  client.execute(`
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS progress_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -52,7 +53,7 @@ export function initializeDatabase() {
   `);
 
   // Create challenges table
-  client.execute(`
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS challenges (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -63,7 +64,7 @@ export function initializeDatabase() {
   `);
 
   // Create conversations table
-  client.execute(`
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS conversations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -73,7 +74,7 @@ export function initializeDatabase() {
   `);
 
   // Create messages table
-  client.execute(`
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       conversation_id INTEGER NOT NULL,

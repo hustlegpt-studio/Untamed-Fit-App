@@ -1,7 +1,5 @@
-import { users, workouts, progressLogs, challenges, conversations, messages } from "@shared/schema";
-import type { InsertUser, User, InsertWorkout, Workout, InsertProgressLog, ProgressLog, Challenge, Conversation, Message } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { memoryStorage } from "./memory-storage";
+import type { InsertUser, User, InsertWorkout, Workout, InsertProgressLog, ProgressLog, Challenge, Conversation, Message } from "../shared/schema";
 
 export interface IStorage {
   // Users
@@ -33,77 +31,67 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return memoryStorage.getUser(id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    return memoryStorage.getUserByUsername(username);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    return memoryStorage.createUser(insertUser);
   }
 
   async updateUser(id: number, settings: Partial<User>): Promise<User> {
-    const [updatedUser] = await db.update(users).set(settings).where(eq(users.id, id)).returning();
-    return updatedUser;
+    return memoryStorage.updateUser(id, settings);
   }
 
   // Workouts
   async getWorkouts(): Promise<Workout[]> {
-    return await db.select().from(workouts);
+    return memoryStorage.getWorkouts();
   }
 
   async getWorkout(id: number): Promise<Workout | undefined> {
-    const [workout] = await db.select().from(workouts).where(eq(workouts.id, id));
-    return workout;
+    return memoryStorage.getWorkout(id);
   }
 
   async createWorkout(workout: InsertWorkout): Promise<Workout> {
-    const [newWorkout] = await db.insert(workouts).values(workout).returning();
-    return newWorkout;
+    return memoryStorage.createWorkout(workout);
   }
 
   // Progress
   async getProgressLogs(userId: number): Promise<ProgressLog[]> {
-    return await db.select().from(progressLogs).where(eq(progressLogs.userId, userId));
+    return memoryStorage.getProgressLogs(userId);
   }
 
   async createProgressLog(log: InsertProgressLog): Promise<ProgressLog> {
-    const [newLog] = await db.insert(progressLogs).values(log).returning();
-    return newLog;
+    return memoryStorage.createProgressLog(log);
   }
 
   // Challenges
   async getChallenges(): Promise<Challenge[]> {
-    return await db.select().from(challenges);
+    return memoryStorage.getChallenges();
   }
 
   async createChallenge(challenge: Omit<Challenge, "id">): Promise<Challenge> {
-    const [newChallenge] = await db.insert(challenges).values(challenge).returning();
-    return newChallenge;
+    return memoryStorage.createChallenge(challenge);
   }
 
   // Chat
   async getConversations(userId: number): Promise<Conversation[]> {
-    return await db.select().from(conversations).where(eq(conversations.userId, userId));
+    return memoryStorage.getConversations(userId);
   }
 
   async createConversation(userId: number, title: string): Promise<Conversation> {
-    const [newConversation] = await db.insert(conversations).values({ userId, title }).returning();
-    return newConversation;
+    return memoryStorage.createConversation(userId, title);
   }
 
   async getMessages(conversationId: number): Promise<Message[]> {
-    return await db.select().from(messages).where(eq(messages.conversationId, conversationId));
+    return memoryStorage.getMessages(conversationId);
   }
 
   async createMessage(conversationId: number, role: string, content: string): Promise<Message> {
-    const [newMessage] = await db.insert(messages).values({ conversationId, role, content }).returning();
-    return newMessage;
+    return memoryStorage.createMessage(conversationId, role, content);
   }
 }
 

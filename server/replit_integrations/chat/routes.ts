@@ -1,11 +1,22 @@
 import type { Express, Request, Response } from "express";
-import OpenAI from "openai";
 import { chatStorage } from "./storage";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+// Mock OpenAI client for now
+const openai = {
+  chat: {
+    completions: {
+      create: async (options: any) => {
+        // Return a mock response
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield { choices: [{ delta: { content: "This is a mock response from the AI assistant." } }] };
+            yield { choices: [{ delta: { content: " The OpenAI integration is not configured." } }] };
+          }
+        };
+      }
+    }
+  }
+};
 
 export function registerChatRoutes(app: Express): void {
   // Get all conversations

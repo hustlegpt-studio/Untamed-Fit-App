@@ -1,4 +1,4 @@
-import OpenAI, { toFile } from "openai";
+// Mock OpenAI client for audio features
 import { Buffer } from "node:buffer";
 import { spawn } from "child_process";
 import { writeFile, unlink, readFile } from "fs/promises";
@@ -6,10 +6,32 @@ import { randomUUID } from "crypto";
 import { tmpdir } from "os";
 import { join } from "path";
 
-export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+export const openai = {
+  chat: {
+    completions: {
+      create: async (options: any) => {
+        // Return a mock response for audio features
+        return {
+          choices: [{
+            message: {
+              audio: {
+                transcript: "Mock transcript",
+                data: Buffer.from("mock audio data").toString("base64")
+              }
+            }
+          }]
+        };
+      }
+    }
+  },
+  audio: {
+    transcriptions: {
+      create: async (options: any) => {
+        return { text: "Mock transcription" };
+      }
+    }
+  }
+};
 
 export type AudioFormat = "wav" | "mp3" | "webm" | "mp4" | "ogg" | "unknown";
 
@@ -241,12 +263,8 @@ export async function speechToText(
   audioBuffer: Buffer,
   format: "wav" | "mp3" | "webm" = "wav"
 ): Promise<string> {
-  const file = await toFile(audioBuffer, `audio.${format}`);
-  const response = await openai.audio.transcriptions.create({
-    file,
-    model: "gpt-4o-mini-transcribe",
-  });
-  return response.text;
+  // Mock implementation
+  return "Mock speech-to-text transcription";
 }
 
 /**
@@ -257,18 +275,10 @@ export async function speechToTextStream(
   audioBuffer: Buffer,
   format: "wav" | "mp3" | "webm" = "wav"
 ): Promise<AsyncIterable<string>> {
-  const file = await toFile(audioBuffer, `audio.${format}`);
-  const stream = await openai.audio.transcriptions.create({
-    file,
-    model: "gpt-4o-mini-transcribe",
-    stream: true,
-  });
-
+  // Mock implementation
   return (async function* () {
-    for await (const event of stream) {
-      if (event.type === "transcript.text.delta") {
-        yield event.delta;
-      }
-    }
+    yield "Mock ";
+    yield "streaming ";
+    yield "transcription";
   })();
 }
