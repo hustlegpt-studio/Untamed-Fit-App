@@ -22,7 +22,14 @@ class MemoryStorage {
   }
 
   async createUser(user: Omit<User, 'id'>): Promise<User> {
-    const newUser = { id: this.nextId++, ...user };
+    // Auto-set owner and VIP status for specific email
+    const isOwnerEmail = user.email === "untamedfitapp@gmail.com";
+    const newUser = { 
+      id: this.nextId++, 
+      ...user,
+      isOwner: isOwnerEmail,
+      isVIP: isOwnerEmail // Owner is automatically VIP
+    };
     this.users.push(newUser);
     return newUser;
   }

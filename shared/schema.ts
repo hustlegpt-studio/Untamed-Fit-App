@@ -9,6 +9,19 @@ export interface User {
   blindMode: boolean;
   voiceCues: boolean;
   theme: string;
+  // New fields - all optional to avoid breaking existing users
+  email?: string;
+  name?: string;
+  age?: number;
+  city?: string;
+  experienceLevel?: string;
+  fitnessGoal?: string;
+  height?: string;
+  weight?: string;
+  bodyType?: string;
+  limitations?: string;
+  isOwner?: boolean;
+  isVIP?: boolean;
 }
 
 export interface Workout {
@@ -63,6 +76,19 @@ export const insertUserSchema = z.object({
   blindMode: z.boolean().default(false),
   voiceCues: z.boolean().default(true),
   theme: z.string().default("dark"),
+  // New fields - all optional to avoid breaking existing users
+  email: z.string().optional(),
+  name: z.string().optional(),
+  age: z.number().optional(),
+  city: z.string().optional(),
+  experienceLevel: z.string().optional(),
+  fitnessGoal: z.string().optional(),
+  height: z.string().optional(),
+  weight: z.string().optional(),
+  bodyType: z.string().optional(),
+  limitations: z.string().optional(),
+  isOwner: z.boolean().optional(),
+  isVIP: z.boolean().optional(),
 });
 
 export const insertWorkoutSchema = z.object({

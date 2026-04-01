@@ -26,14 +26,16 @@ const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 const AI21_API_KEY = process.env.AI21_API_KEY;
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 
-// Add debugging for API keys
-console.log('🔑 Original Kevin AI - API Key Status:');
-console.log('OPENROUTER_API_KEY:', OPENROUTER_API_KEY ? '✅ Present' : '❌ Missing');
-console.log('GOOGLE_API_KEY:', GOOGLE_API_KEY ? '✅ Present' : '❌ Missing');
-console.log('GROQ_API_KEY:', GROQ_API_KEY ? '✅ Present' : '❌ Missing');
-console.log('DEEPSEEK_API_KEY:', DEEPSEEK_API_KEY ? '✅ Present' : '❌ Missing');
-console.log('FIREWORKS_API_KEY:', FIREWORKS_API_KEY ? '✅ Present' : '❌ Missing');
-console.log('TOGETHER_API_KEY:', TOGETHER_API_KEY ? '✅ Present' : '❌ Missing');
+// Add debugging for API keys - Delay to ensure env is loaded
+setTimeout(() => {
+  console.log('🔑 Original Kevin AI - API Key Status:');
+  console.log('OPENROUTER_API_KEY:', OPENROUTER_API_KEY ? '✅ Present' : '❌ Missing');
+  console.log('GOOGLE_API_KEY:', GOOGLE_API_KEY ? '✅ Present' : '❌ Missing');
+  console.log('GROQ_API_KEY:', GROQ_API_KEY ? '✅ Present' : '❌ Missing');
+  console.log('DEEPSEEK_API_KEY:', DEEPSEEK_API_KEY ? '✅ Present' : '❌ Missing');
+  console.log('FIREWORKS_API_KEY:', FIREWORKS_API_KEY ? '✅ Present' : '❌ Missing');
+  console.log('TOGETHER_API_KEY:', TOGETHER_API_KEY ? '✅ Present' : '❌ Missing');
+}, 1000);
 
 // Model configuration
 const MODEL_CONFIG = {

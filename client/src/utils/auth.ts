@@ -4,6 +4,18 @@ interface User {
   profile: {
     [key: string]: any;
   };
+  // New fields - all optional to avoid breaking existing users
+  name?: string;
+  age?: number;
+  city?: string;
+  experienceLevel?: string;
+  fitnessGoal?: string;
+  height?: string;
+  weight?: string;
+  bodyType?: string;
+  limitations?: string;
+  isOwner?: boolean;
+  isVIP?: boolean;
 }
 
 const USERS_STORAGE_KEY = "untamedUsers";
@@ -16,7 +28,15 @@ export function createUser(email: string, password: string): User {
     throw new Error("Email already in use");
   }
   
-  const newUser: User = { email, password, profile: {} };
+  // Auto-set owner and VIP status for specific email
+  const isOwnerEmail = email === "untamedfitapp@gmail.com";
+  const newUser: User = { 
+    email, 
+    password, 
+    profile: {},
+    isOwner: isOwnerEmail,
+    isVIP: isOwnerEmail // Owner is automatically VIP
+  };
   users.push(newUser);
   localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   
@@ -49,8 +69,8 @@ export function logoutUser(): void {
 }
 
 export function isOwner(): boolean {
-  const email = getActiveUser();
-  return email === "untamedfitapp@gmail.com";
+  const currentUser = getCurrentUserProfile();
+  return currentUser?.email === "untamedfitapp@gmail.com" || currentUser?.isOwner === true;
 }
 
 export function isAuthenticated(): boolean {
