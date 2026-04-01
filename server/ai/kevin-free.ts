@@ -258,51 +258,67 @@ class KevinFreeAIService {
 
   private async tryAllProviders(messages: any[]): Promise<string> {
     let lastError: Error | null = null;
+    console.log('🔄 Trying all AI providers in fallback order...');
+    console.log('📝 Messages to process:', messages.length);
 
     for (const modelId of FREE_FALLBACK_CHAIN) {
       try {
+        console.log(`🤖 Attempting ${modelId}...`);
         const config = Object.values(MODEL_CONFIG).find(provider => 
           Object.values(provider).find(model => model.model === modelId)
         );
         
-        if (!config) continue;
+        if (!config) {
+          console.log(`❌ No config found for ${modelId}`);
+          continue;
+        }
 
         const provider = Object.values(config)[0];
+        console.log(`📡 Using provider: ${provider.provider}`);
         let response: string;
 
         switch (provider.provider) {
           case 'groq':
+            console.log('🔌 Calling Groq with key:', GROQ_API_KEY ? GROQ_API_KEY.substring(0, 10) + '...' : 'MISSING');
             response = await this.callGroq(messages);
             break;
           case 'deepseek':
+            console.log('🔌 Calling DeepSeek with key:', DEEPSEEK_API_KEY ? DEEPSEEK_API_KEY.substring(0, 10) + '...' : 'MISSING');
             response = await this.callDeepSeek(messages);
             break;
           case 'fireworks':
+            console.log('🔌 Calling Fireworks with key:', FIREWORKS_API_KEY ? FIREWORKS_API_KEY.substring(0, 10) + '...' : 'MISSING');
             response = await this.callFireworks(messages);
             break;
           case 'together':
+            console.log('🔌 Calling Together with key:', TOGETHER_API_KEY ? TOGETHER_API_KEY.substring(0, 10) + '...' : 'MISSING');
             response = await this.callTogether(messages);
             break;
           case 'google':
+            console.log('🔌 Calling Google with key:', GOOGLE_API_KEY ? GOOGLE_API_KEY.substring(0, 10) + '...' : 'MISSING');
             response = await this.callGoogle(messages);
             break;
           case 'openrouter':
+            console.log('🔌 Calling OpenRouter with key:', OPENROUTER_API_KEY ? OPENROUTER_API_KEY.substring(0, 10) + '...' : 'MISSING');
             response = await this.callOpenRouter(messages);
             break;
           default:
             throw new Error(`Unknown provider: ${provider.provider}`);
         }
 
-        console.log(`✅ Successfully used ${modelId}`);
+        console.log(`✅ Success with ${modelId}! Response:`, response.substring(0, 100) + '...');
         return response;
 
       } catch (error) {
         lastError = error as Error;
         console.log(`❌ ${modelId} failed: ${(error as Error).message}`);
+        console.log('🔍 Full error:', error);
         continue;
       }
     }
 
+    console.log('💥 All AI providers failed, using fallback');
+    console.log('🔍 Last error:', lastError);
     throw lastError || new Error('All AI providers failed');
   }
 

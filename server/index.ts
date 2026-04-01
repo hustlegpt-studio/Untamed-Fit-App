@@ -2,6 +2,27 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
+
+// AI Provider Status Check
+console.log('🔑 Initializing AI clients with API keys...');
+console.log('GROQ_API_KEY:', process.env.GROQ_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('DEEPSEEK_API_KEY:', process.env.DEEPSEEK_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('FIREWORKS_API_KEY:', process.env.FIREWORKS_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('TOGETHER_API_KEY:', process.env.TOGETHER_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('GOOGLE_API_KEY:', process.env.GOOGLE_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('OPENROUTER_API_KEY:', process.env.OPENROUTER_API_KEY ? '✅ Present' : '❌ Missing');
+
+console.log('🤖 AI Clients initialized:');
+console.log('groqClient:', process.env.GROQ_API_KEY ? '✅' : '❌');
+console.log('deepseekClient:', process.env.DEEPSEEK_API_KEY ? '✅' : '❌');
+console.log('fireworksClient:', process.env.FIREWORKS_API_KEY ? '✅' : '❌');
+console.log('togetherClient:', process.env.TOGETHER_API_KEY ? '✅' : '❌');
+console.log('googleClient:', process.env.GOOGLE_API_KEY ? '✅' : '❌');
+console.log('openrouterClient:', process.env.OPENROUTER_API_KEY ? '✅' : '❌');
 
 const app = express();
 const httpServer = createServer(app);

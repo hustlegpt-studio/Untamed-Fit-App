@@ -18,7 +18,12 @@ import { recommendWorkout } from "@/utils/workoutEngine";
 import { getCurrentUserProfile } from "@/utils/auth";
 
 export default function AskKevin() {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([
+    {
+      role: "assistant",
+      content: "Hey! I'm KG - your personal fitness coach! I'm here to help you crush your fitness goals. What are we working on today?"
+    }
+  ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const { toast } = useToast();
@@ -54,13 +59,15 @@ export default function AskKevin() {
     const initializeSpeechRecognition = () => {
       // Check for browser support
       const SpeechRecognition = (window as any).SpeechRecognition || 
-                               (window as any).webkitSpeechRecognition;
+                               (window as any).webkitSpeechRecognition ||
+                               (window as any).mozSpeechRecognition ||
+                               (window as any).msSpeechRecognition;
       
       if (!SpeechRecognition) {
         console.warn('Speech recognition not supported in this browser');
         toast({
           title: "Voice Chat Not Supported",
-          description: "Your browser doesn't support voice recognition. Try Chrome or Edge.",
+          description: "Your browser doesn't support voice recognition. Try Chrome, Edge, or Firefox.",
           variant: "destructive"
         });
         return;
@@ -74,33 +81,40 @@ export default function AskKevin() {
       recognition.maxAlternatives = 1;
       
       recognition.onstart = () => {
-        console.log('Speech recognition started');
+        console.log('🎤 Speech recognition started');
         setIsListening(true);
         setIsRecording(true);
         setIsUserSpeaking(true);
       };
       
       recognition.onresult = (event: any) => {
-        console.log('Speech recognition result:', event);
+        console.log('🎤 Speech recognition result:', event);
         let transcript = '';
+        let isFinal = false;
         
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            transcript = result[0].transcript;
-          } else if (transcript === '') {
-            transcript = result[0].transcript; // Use interim results
+        try {
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            if (result.isFinal) {
+              transcript = result[0].transcript;
+              isFinal = true;
+              console.log('🎤 Final transcript:', transcript);
+            } else if (transcript === '') {
+              transcript = result[0].transcript; // Use interim results
+              console.log('🎤 Interim transcript:', transcript);
+            }
           }
+        } catch (error) {
+          console.error('🎤 Error processing speech result:', error);
         }
         
         if (transcript) {
           setInput(transcript);
-          console.log('Transcript:', transcript);
         }
       };
       
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
+        console.error('🎤 Speech recognition error:', event.error);
         setIsListening(false);
         setIsRecording(false);
         setIsUserSpeaking(false);
@@ -108,19 +122,19 @@ export default function AskKevin() {
         let errorMessage = 'Voice recognition failed';
         switch (event.error) {
           case 'no-speech':
-            errorMessage = 'No speech detected. Please try again.';
+            errorMessage = 'No speech detected. Please speak clearly and try again.';
             break;
           case 'audio-capture':
-            errorMessage = 'Microphone not available. Please check your permissions.';
+            errorMessage = 'Microphone not available. Please check your microphone permissions.';
             break;
           case 'not-allowed':
-            errorMessage = 'Microphone permission denied. Please allow microphone access.';
+            errorMessage = 'Microphone permission denied. Please allow microphone access and refresh.';
             break;
           case 'network':
-            errorMessage = 'Network error. Please check your connection.';
+            errorMessage = 'Network error. Please check your internet connection.';
             break;
           case 'service-not-allowed':
-            errorMessage = 'Speech recognition service not allowed.';
+            errorMessage = 'Speech recognition service not allowed by browser.';
             break;
           default:
             errorMessage = 'Voice recognition failed. Please try again.';
@@ -134,25 +148,27 @@ export default function AskKevin() {
       };
       
       recognition.onend = () => {
-        console.log('Speech recognition ended');
+        console.log('🎤 Speech recognition ended');
         setIsListening(false);
         setIsRecording(false);
         setIsUserSpeaking(false);
       };
       
       recognitionRef.current = recognition;
+      console.log('🎤 Speech recognition initialized successfully');
     };
 
     // Delay initialization to ensure DOM is ready
-    const timer = setTimeout(initializeSpeechRecognition, 1000);
+    const timer = setTimeout(initializeSpeechRecognition, 2000);
     
     return () => {
       clearTimeout(timer);
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
+          console.log('🎤 Speech recognition cleaned up');
         } catch (error) {
-          console.log('Speech recognition cleanup error:', error);
+          console.log('🎤 Speech recognition cleanup error:', error);
         }
       }
     };
@@ -453,8 +469,8 @@ export default function AskKevin() {
                       {msg.role === "assistant" && (
                         <div className="absolute -top-2 -right-12 text-xs text-primary/60 font-semibold bg-black/80 px-2 py-1 rounded">
                           Trainer KG
-                          {data.personaName && data.personaName !== 'KG' && (
-                            <span className="ml-1 text-primary/80">({data.personaName})</span>
+                          {personaInfo?.currentName && personaInfo.currentName !== 'KG' && (
+                            <span className="ml-1 text-primary/80">({personaInfo.currentName})</span>
                           )}
                         </div>
                       )}

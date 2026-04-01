@@ -8,10 +8,12 @@ export function registerKevinFreeRoutes(app: express.Application) {
   // Main chat endpoint for Train With Kevin AI panel
   app.post('/api/kevin-free/chat', async (req, res) => {
     try {
+      console.log('📨 Received chat request:', req.body);
       const { message, conversationHistory } = req.body;
 
       // Validate request
       if (!message || typeof message !== 'string') {
+        console.log('❌ Invalid message format');
         return res.status(400).json({
           success: false,
           error: 'Message is required and must be a string'
@@ -19,11 +21,15 @@ export function registerKevinFreeRoutes(app: express.Application) {
       }
 
       if (!conversationHistory || !Array.isArray(conversationHistory)) {
+        console.log('❌ Invalid conversation history format');
         return res.status(400).json({
           success: false,
           error: 'Conversation history is required and must be an array'
         });
       }
+
+      console.log('🤖 Calling AI service with message:', message);
+      console.log('📚 Conversation history length:', conversationHistory.length);
 
       // Validate conversation history format
       const isValidHistory = conversationHistory.every(msg => 
@@ -41,12 +47,24 @@ export function registerKevinFreeRoutes(app: express.Application) {
       }
 
       // Generate AI response
+      console.log('🧠 Calling kevinFreeAIService.generateResponse...');
       const aiResponse = await kevinFreeAIService.generateResponse({
         message: message.trim(),
         conversationHistory
       });
+      
+      console.log('✅ AI Service Response:', aiResponse);
 
       // Return successful response
+      console.log('📤 Sending response to client:', {
+        success: true,
+        response: aiResponse.response,
+        modelName: aiResponse.modelName,
+        personaName: aiResponse.personaName,
+        profileUpdated: aiResponse.profileUpdated || false,
+        needsProfileConfirmation: aiResponse.needsProfileConfirmation || false
+      });
+      
       res.json({
         success: true,
         response: aiResponse.response,

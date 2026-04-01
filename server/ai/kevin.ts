@@ -5,8 +5,11 @@ import Groq from 'groq-sdk';
 import { HfInference } from '@huggingface/inference';
 import Cohere from 'cohere-ai';
 import MistralClient from '@mistralai/mistralai';
+import { fireworks } from '@ai-sdk/fireworks';
+import { generateText } from 'ai';
+import Together from 'together-ai';
 
-// Environment variables
+// Environment variables - Using same keys as kevin-free
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_API_KEY_V1 = process.env.OPENROUTER_API_KEY_V1;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -14,12 +17,23 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_KEY_FREE = process.env.GROQ_API_KEY_FREE;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const FIREWORKS_API_KEY = process.env.FIREWORKS_API_KEY;
+const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
 const COHERE_API_KEY = process.env.COHERE_API_KEY;
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 const AI21_API_KEY = process.env.AI21_API_KEY;
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+
+// Add debugging for API keys
+console.log('🔑 Original Kevin AI - API Key Status:');
+console.log('OPENROUTER_API_KEY:', OPENROUTER_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('GOOGLE_API_KEY:', GOOGLE_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('GROQ_API_KEY:', GROQ_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('DEEPSEEK_API_KEY:', DEEPSEEK_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('FIREWORKS_API_KEY:', FIREWORKS_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('TOGETHER_API_KEY:', TOGETHER_API_KEY ? '✅ Present' : '❌ Missing');
 
 // Model configuration
 const MODEL_CONFIG = {
@@ -63,18 +77,18 @@ const MODEL_CONFIG = {
   }
 };
 
-// Optimized fallback chain (best free models with vision/trading capabilities first)
+// Optimized fallback chain (same as kevin-free - best free models first)
 const FALLBACK_CHAIN = [
-  'openrouter-gpt-4.1',        // Best overall, vision capable, $5 free credit
-  'anthropic-claude-3.7',      // High accuracy, vision capable, limited free
-  'google-gemini-2.0',         // Fast, vision capable, 15 req/min free
-  'groq-llama3.3',             // High-speed, no vision, 30 req/min free
-  'deepseek-chat',             // Cost-effective, no vision, unlimited free
-  'mistral-mixtral',           // Good performance, free tier available
-  'cohere-command',            // Enterprise-grade, free tier
-  'huggingface-mixtral',       // Open-source, community free
-  'perplexity-sonar',          // Research-focused, good analysis
-  'openrouter-gpt-3.5'         // Reliable fallback, same OpenRouter key
+  'groq-llama3.3',             // Best: Fastest, 30 req/min free
+  'deepseek-chat',             // Great: Unlimited free
+  'google-gemini-2.0',         // Good: 15 req/min free
+  'openrouter-gpt-4.1',        // Backup: $5 free credit
+  'openrouter-gpt-3.5',        // Backup: Same OpenRouter key
+  'anthropic-claude-3.7',      // If Anthropic key available
+  'mistral-mixtral',           // If Mistral key available
+  'cohere-command',            // If Cohere key available
+  'huggingface-mixtral',       // If HuggingFace key available
+  'perplexity-sonar'           // If Perplexity key available
 ];
 
 // Initialize AI clients
@@ -98,6 +112,10 @@ const perplexityClient = PERPLEXITY_API_KEY ? new OpenAI({
   apiKey: PERPLEXITY_API_KEY,
   baseURL: "https://api.perplexity.ai"
 }) : null;
+
+// Add Fireworks and Together clients
+const fireworksClient = FIREWORKS_API_KEY ? fireworks() : null;
+const togetherClient = TOGETHER_API_KEY ? new Together({ apiKey: TOGETHER_API_KEY }) : null;
 
 const ai21Client = AI21_API_KEY ? new Cohere({ 
   apiKey: AI21_API_KEY,
@@ -383,6 +401,12 @@ Keep responses conversational but professional, like a real trainer coaching a c
           case 'perplexity':
             response = await this.callPerplexity(messages, modelId);
             break;
+          case 'fireworks':
+            response = await this.callFireworks(messages, modelId);
+            break;
+          case 'together':
+            response = await this.callTogether(messages, modelId);
+            break;
           case 'ai21':
             response = await this.callAI21(messages, modelId);
             break;
@@ -413,6 +437,33 @@ Keep responses conversational but professional, like a real trainer coaching a c
     };
   }
 
+  private async callFireworks(messages: any[], model: string): Promise<string> {
+    if (!fireworksClient) throw new Error('Fireworks client not initialized');
+    
+    const lastMessage = messages[messages.length - 1].content;
+    const response = await generateText({
+      model: fireworksClient(MODEL_CONFIG.fireworks[model as keyof typeof MODEL_CONFIG.fireworks].model),
+      prompt: lastMessage,
+      maxTokens: 1000,
+      temperature: 0.7,
+    });
+    
+    return response.text || "Ready to build your best self!";
+  }
+
+  private async callTogether(messages: any[], model: string): Promise<string> {
+    if (!togetherClient) throw new Error('Together client not initialized');
+    
+    const response = await togetherClient.chat.completions.create({
+      model: MODEL_CONFIG.together[model as keyof typeof MODEL_CONFIG.together].model,
+      messages,
+      max_tokens: 1000,
+      temperature: 0.7,
+    });
+    
+    return response.choices[0]?.message?.content || "Let's crush your fitness goals!";
+  }
+
   // Health check for all models
   async healthCheck(): Promise<Record<string, boolean>> {
     const results: Record<string, boolean> = {};
@@ -426,6 +477,8 @@ Keep responses conversational but professional, like a real trainer coaching a c
     results.mistral = !!mistralClient;
     results.huggingface = !!huggingfaceClient;
     results.perplexity = !!perplexityClient;
+    results.fireworks = !!fireworksClient;
+    results.together = !!togetherClient;
     results.ai21 = !!ai21Client;
     
     return results;

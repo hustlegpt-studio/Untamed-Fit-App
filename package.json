@@ -53,6 +53,7 @@
     "cohere-ai": "^7.14.0",
     "date-fns": "^3.6.0",
     "deepseek-chat": "^1.0.0",
+    "dotenv": "^17.3.1",
     "embla-carousel-react": "^8.6.0",
     "express": "^5.0.1",
     "express-session": "^1.18.1",
