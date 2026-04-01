@@ -43,12 +43,22 @@ export async function registerRoutes(
   });
 
   app.get(api.auth.me.path, async (req, res) => {
-    // Mock user for now since no session management
+    // For now, return the admin user with all profile fields
+    // In a real app, this would use session/JWT to get the logged-in user
     const user = await storage.getUserByUsername("admin");
     if (!user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    res.json(user);
+    
+    // Ensure owner/VIP status is set correctly
+    const userWithEmail = {
+      ...user,
+      email: user.email || "untamedfitapp@gmail.com", // Default to owner email for admin
+      isOwner: user.email === "untamedfitapp@gmail.com" || user.isOwner,
+      isVIP: user.email === "untamedfitapp@gmail.com" || user.isVIP
+    };
+    
+    res.json(userWithEmail);
   });
 
   app.get(api.workouts.list.path, async (req, res) => {
@@ -136,7 +146,17 @@ async function seedDatabase() {
       subscriptionTier: "pro",
       blindMode: false,
       voiceCues: true,
-      theme: "dark"
+      theme: "dark",
+      email: "untamedfitapp@gmail.com", // Owner email
+      name: "Admin User",
+      age: 30,
+      city: "Virtual City",
+      experienceLevel: "expert",
+      fitnessGoal: "general-fitness",
+      height: "5'10\"",
+      weight: "180 lbs",
+      bodyType: "athletic",
+      limitations: ""
     });
   }
 
