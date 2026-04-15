@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
 import { Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat, Heart, MoreHorizontal, ChevronLeft, ChevronRight, List, Home, Search, Library, Radio, Music, Minimize2, Maximize2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useSpotifyPlayer, SpotifyPlayerProvider } from "@/contexts/SpotifyPlayerContext";
+import { DraggablePlayer } from "@/components/DraggablePlayer";
 
 interface Playlist {
   id: string;
@@ -60,20 +62,19 @@ const playlists: Playlist[] = [
   },
 ];
 
-export default function MusicPlayer() {
+const MusicPlayerContent: React.FC = () => {
   const { data: user } = useAuth();
   const [isPremium] = useState(user?.subscriptionTier === "pro" || user?.subscriptionTier === "elite");
   const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(70);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState("0:00");
-  const [duration, setDuration] = useState("0:00");
-  const [isShuffleOn, setIsShuffleOn] = useState(false);
-  const [repeatMode, setRepeatMode] = useState<'off' | 'one' | 'all'>('off');
-  const [isLiked, setIsLiked] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMiniPlayer, setIsMiniPlayer] = useState(false);
+  
+  const { state, play, pause, next, previous, setVolume, seek, loadPlaylist, initialize } = useSpotifyPlayer();
+
+  useEffect(() => {
+    // Initialize Spotify player
+    initialize();
+  }, []);
 
   useEffect(() => {
     // Get playlist from URL params or localStorage
@@ -84,42 +85,44 @@ export default function MusicPlayer() {
       const playlist = playlists.find(p => p.id === playlistId);
       if (playlist) {
         setCurrentPlaylist(playlist);
+        // Load playlist into Spotify player
+        const playlistUri = `spotify:playlist:${playlist.url.split('/').pop()?.split('?')[0]}`;
+        loadPlaylist(playlistUri);
       }
     }
-  }, []);
+  }, [loadPlaylist]);
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    if (state.isPlaying) {
+      pause();
+    } else {
+      play();
+    }
   };
 
   const handleSkipNext = () => {
-    const currentIndex = playlists.findIndex(p => p.id === currentPlaylist?.id);
-    const nextIndex = isShuffleOn 
-      ? Math.floor(Math.random() * playlists.length)
-      : (currentIndex + 1) % playlists.length;
-    setCurrentPlaylist(playlists[nextIndex]);
+    next();
   };
 
   const handleSkipPrevious = () => {
-    const currentIndex = playlists.findIndex(p => p.id === currentPlaylist?.id);
-    const prevIndex = isShuffleOn 
-      ? Math.floor(Math.random() * playlists.length)
-      : (currentIndex - 1 + playlists.length) % playlists.length;
-    setCurrentPlaylist(playlists[prevIndex]);
+    previous();
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVolume(Number(e.target.value));
+    const volume = Number(e.target.value) / 100;
+    setVolume(volume);
   };
 
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProgress(Number(e.target.value));
+    const position = (Number(e.target.value) / 100) * state.duration;
+    seek(position);
   };
 
-  const toggleRepeat = () => {
-    const modes: ('off' | 'one' | 'all')[] = ['off', 'one', 'all'];
-    const currentIndex = modes.indexOf(repeatMode);
-    setRepeatMode(modes[(currentIndex + 1) % modes.length]);
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const Sidebar = () => (
@@ -295,17 +298,109 @@ export default function MusicPlayer() {
                   </div>
                 </div>
                 
-                {currentPlaylist && (
-                  <iframe
-                    src={`https://open.spotify.com/embed/playlist/${currentPlaylist.url.split('/').pop()?.split('?')[0]}?utm_source=generator&theme=0`}
-                    width="100%"
-                    height="380"
-                    frameBorder="0"
-                    allowFullScreen=""
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="lazy"
-                    className="rounded-lg bg-black"
-                  />
+                {state.isReady ? (
+                  <div className="space-y-6">
+                    {/* Error Message */}
+                    {state.error && (
+                      <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3">
+                        <p className="text-yellow-500 text-sm">{state.error}</p>
+                      </div>
+                    )}
+                    
+                    {state.isUsingSDK ? (
+                      // Web Playback SDK Interface
+                      <>
+                        {/* Current Track Display */}
+                        {state.currentTrack && (
+                          <div className="flex items-center gap-4 p-4 bg-black/20 rounded-lg">
+                            <img
+                              src={state.currentTrack.imageUrl ?? 'https://via.placeholder.com/80'}
+                              alt={state.currentTrack.album}
+                              className="w-20 h-20 rounded-lg object-cover"
+                            />
+                            <div className="flex-1">
+                              <h4 className="text-white font-bold text-lg">{state.currentTrack.name}</h4>
+                              <p className="text-gray-400">{state.currentTrack.artist}</p>
+                              <p className="text-gray-500 text-sm">{state.currentTrack.album}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Progress Bar */}
+                        <div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={state.duration ? (state.position / state.duration) * 100 : 0}
+                            onChange={handleProgressChange}
+                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                          />
+                          <div className="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>{formatTime(state.position)}</span>
+                            <span>{formatTime(state.duration)}</span>
+                          </div>
+                        </div>
+
+                        {/* Control Buttons */}
+                        <div className="flex items-center justify-center gap-6">
+                          <button
+                            onClick={handleSkipPrevious}
+                            className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                          >
+                            <SkipBack className="w-6 h-6" />
+                          </button>
+                          <button
+                            onClick={handlePlayPause}
+                            className="p-4 rounded-full bg-primary hover:bg-primary/80 text-black transition-colors"
+                          >
+                            {state.isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 fill-current" />}
+                          </button>
+                          <button
+                            onClick={handleSkipNext}
+                            className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                          >
+                            <SkipForward className="w-6 h-6" />
+                          </button>
+                        </div>
+
+                        {/* Volume Control */}
+                        <div className="flex items-center gap-3">
+                          <Volume2 className="w-5 h-5 text-gray-400" />
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={state.volume * 100}
+                            onChange={handleVolumeChange}
+                            className="flex-1 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                          />
+                          <span className="text-gray-400 text-sm w-8">{Math.round(state.volume * 100)}%</span>
+                        </div>
+                      </>
+                    ) : (
+                      // Fallback to Embed Player
+                      <>
+                        {currentPlaylist && (
+                          <iframe
+                            src={`https://open.spotify.com/embed/playlist/${currentPlaylist.url.split('/').pop()?.split('?')[0]}?utm_source=generator&theme=0`}
+                            width="100%"
+                            height="380"
+                            frameBorder="0"
+                            allowFullScreen=""
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            className="rounded-lg bg-black"
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-400">Initializing Spotify Player...</p>
+                  </div>
                 )}
               </div>
             </motion.div>
@@ -379,8 +474,17 @@ export default function MusicPlayer() {
     <Layout>
       <div className="h-screen bg-black flex overflow-hidden">
         <Sidebar />
-        {isMiniPlayer ? <MiniPlayer /> : <MainContent />}
+        {isMiniPlayer ? null : <MainContent />}
       </div>
+      <DraggablePlayer isVisible={isMiniPlayer} onClose={() => setIsMiniPlayer(false)} />
     </Layout>
+  );
+}
+
+export default function MusicPlayer() {
+  return (
+    <SpotifyPlayerProvider>
+      <MusicPlayerContent />
+    </SpotifyPlayerProvider>
   );
 }

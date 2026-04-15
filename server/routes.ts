@@ -7,6 +7,7 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerAudioRoutes } from "./replit_integrations/audio";
 import { registerKevinRoutes } from "./api/kevin";
 import { registerKevinFreeRoutes } from "./api/kevin-free";
+import spotifyRoutes from "./spotify";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -220,6 +221,9 @@ export async function registerRoutes(
   registerAudioRoutes(app);
   registerKevinRoutes(app);
   registerKevinFreeRoutes(app);
+  
+  // Register Spotify routes
+  app.use('/api/spotify', spotifyRoutes);
 
   // Seed DB with some mocked content
   seedDatabase().catch(console.error);
