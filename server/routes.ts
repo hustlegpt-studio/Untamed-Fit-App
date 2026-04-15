@@ -43,22 +43,112 @@ export async function registerRoutes(
   });
 
   app.get(api.auth.me.path, async (req, res) => {
-    // For now, return the admin user with all profile fields
+    // Get the active user from the request (simplified for now)
     // In a real app, this would use session/JWT to get the logged-in user
-    const user = await storage.getUserByUsername("admin");
-    if (!user) {
-      return res.status(401).json({ message: "Not authenticated" });
+    const activeUserEmail = req.headers['x-user-email'] as string;
+    
+    if (!activeUserEmail) {
+      // Fallback to admin user for development
+      const user = await storage.getUserByUsername("admin");
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Ensure owner/VIP status is set correctly
+      const userWithEmail = {
+        ...user,
+        email: user.email || "untamedfitapp@gmail.com", // Default to owner email for admin
+        isOwner: user.email === "untamedfitapp@gmail.com" || user.isOwner,
+        isVIP: user.email === "untamedfitapp@gmail.com" || user.isVIP
+      };
+      
+      res.json(userWithEmail);
+      return;
     }
     
-    // Ensure owner/VIP status is set correctly
-    const userWithEmail = {
-      ...user,
-      email: user.email || "untamedfitapp@gmail.com", // Default to owner email for admin
-      isOwner: user.email === "untamedfitapp@gmail.com" || user.isOwner,
-      isVIP: user.email === "untamedfitapp@gmail.com" || user.isVIP
-    };
+    // Try to find user by email
+    let user = await storage.getUserByEmail(activeUserEmail);
     
-    res.json(userWithEmail);
+    // If user doesn't exist in server storage, create them from client data
+    if (!user) {
+      // This is a simplified sync - in production, you'd want proper session management
+      const defaultUser = {
+        username: activeUserEmail.split('@')[0], // Use email prefix as username
+        email: activeUserEmail,
+        password: "stored-on-client", // Password is handled client-side
+        subscriptionTier: "free",
+        blindMode: false,
+        voiceCues: true,
+        theme: "dark"
+      };
+      
+      user = await storage.createUser(defaultUser);
+    }
+    
+    // Check if user is VIP from server storage
+    const isVipUser = await storage.isVipUser(user.email || "");
+    
+    res.json({
+      ...user,
+      isVIP: user.isVIP || isVipUser
+    });
+  });
+
+  // VIP User Management API Routes
+  app.get('/api/vip-users', async (req, res) => {
+    try {
+      const activeUserEmail = req.headers['x-user-email'] as string;
+      
+      // Only allow owner to access VIP users list
+      if (activeUserEmail !== "untamedfitapp@gmail.com") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const vipUsers = await storage.getVipUsers();
+      res.json(vipUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get VIP users" });
+    }
+  });
+
+  app.post('/api/vip-users', async (req, res) => {
+    try {
+      const activeUserEmail = req.headers['x-user-email'] as string;
+      
+      // Only allow owner to add VIP users
+      if (activeUserEmail !== "untamedfitapp@gmail.com") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      await storage.addVipUser(email);
+      const vipUsers = await storage.getVipUsers();
+      res.json(vipUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add VIP user" });
+    }
+  });
+
+  app.delete('/api/vip-users/:email', async (req, res) => {
+    try {
+      const activeUserEmail = req.headers['x-user-email'] as string;
+      
+      // Only allow owner to remove VIP users
+      if (activeUserEmail !== "untamedfitapp@gmail.com") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { email } = req.params;
+      await storage.removeVipUser(email);
+      const vipUsers = await storage.getVipUsers();
+      res.json(vipUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove VIP user" });
+    }
   });
 
   app.get(api.workouts.list.path, async (req, res) => {

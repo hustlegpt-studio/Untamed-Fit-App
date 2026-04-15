@@ -26,7 +26,7 @@ export default function Splash() {
 
   const handleLogoClick = () => {
     if (canContinue) {
-      window.location.href = "/auth";
+      window.location.href = "/login";
     }
   };
 

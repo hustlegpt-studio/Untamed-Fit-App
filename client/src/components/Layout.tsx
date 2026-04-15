@@ -44,7 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     logoutUser();
-    window.location.href = "/auth";
+    window.location.href = "/login";
   };
 
   return (

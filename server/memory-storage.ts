@@ -10,6 +10,7 @@ class MemoryStorage {
   private challenges: Challenge[] = [];
   private conversations: Conversation[] = [];
   private messages: Message[] = [];
+  private vipUsers: string[] = ["user1@example.com", "user2@example.com"]; // Initialize with test emails
   private nextId = 1;
 
   // Users
@@ -19,6 +20,10 @@ class MemoryStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return this.users.find(u => u.username === username);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return this.users.find(u => u.email === email);
   }
 
   async createUser(user: Omit<User, 'id'>): Promise<User> {
@@ -41,6 +46,25 @@ class MemoryStorage {
       return this.users[index];
     }
     throw new Error('User not found');
+  }
+
+  // VIP User Management
+  async getVipUsers(): Promise<string[]> {
+    return [...this.vipUsers];
+  }
+
+  async addVipUser(email: string): Promise<void> {
+    if (!this.vipUsers.includes(email)) {
+      this.vipUsers.push(email);
+    }
+  }
+
+  async removeVipUser(email: string): Promise<void> {
+    this.vipUsers = this.vipUsers.filter(e => e !== email);
+  }
+
+  async isVipUser(email: string): Promise<boolean> {
+    return this.vipUsers.includes(email);
   }
 
   // Workouts

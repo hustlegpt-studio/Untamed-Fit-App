@@ -23,7 +23,7 @@ export default function GoalsSetup() {
   // Redirect to auth if not logged in
   React.useEffect(() => {
     if (!isAuthenticated()) {
-      window.location.href = "/auth";
+      window.location.href = "/login";
     }
   }, []);
 
@@ -58,7 +58,7 @@ export default function GoalsSetup() {
 
   const handleLogout = () => {
     logoutUser();
-    window.location.href = "/auth";
+    window.location.href = "/login";
   };
 
   return (

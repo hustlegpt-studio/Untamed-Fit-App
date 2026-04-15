@@ -3,13 +3,13 @@ import { Layout } from "@/components/Layout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpdateSettings } from "@/hooks/use-settings";
 import { getCurrentUserProfile, updateUserProfile } from "@/utils/auth";
-import { Settings as SettingsIcon, Bell, Eye, CreditCard, Info, LogOut, User, Crown, Mail, Lock } from "lucide-react";
+import { DEFAULT_SOUNDS, playWeightDrop, playButtonClick, playRepComplete } from "@/utils/audio";
+import { Settings as SettingsIcon, Bell, Eye, CreditCard, Info, LogOut, User, Crown, Mail, Lock, Calendar, Volume2 } from "lucide-react";
 
 export default function Settings() {
   const { data: user } = useAuth();
@@ -21,6 +21,7 @@ export default function Settings() {
   const [accountSaved, setAccountSaved] = useState(false);
   const [vipUsers, setVipUsers] = useState<string[]>([]);
   const [newVipEmail, setNewVipEmail] = useState("");
+  const [vipLoading, setVipLoading] = useState(false);
 
   useEffect(() => {
     const profile = getCurrentUserProfile();
@@ -34,7 +35,7 @@ export default function Settings() {
     
     // Load VIP users if owner
     if (user?.email === "untamedfitapp@gmail.com") {
-      setVipUsers(["user1@example.com", "user2@example.com"]); // Mock data
+      loadVipUsers();
     }
   }, [user]);
 
@@ -66,21 +67,78 @@ export default function Settings() {
     }
   };
 
-  const addVipUser = () => {
-    if (newVipEmail && user?.email === "untamedfitapp@gmail.com") {
-      setVipUsers(prev => [...prev, newVipEmail]);
-      setNewVipEmail("");
+  const loadVipUsers = async () => {
+    try {
+      const activeUser = localStorage.getItem("untamedActiveUser");
+      const response = await fetch('/api/vip-users', {
+        headers: activeUser ? { "x-user-email": activeUser } : {}
+      });
+      if (response.ok) {
+        const users = await response.json();
+        setVipUsers(users);
+      }
+    } catch (error) {
+      console.error("Failed to load VIP users:", error);
     }
   };
 
-  const removeVipUser = (email: string) => {
-    if (user?.email === "untamedfitapp@gmail.com") {
-      setVipUsers(prev => prev.filter(e => e !== email));
+  const addVipUser = async () => {
+    if (!newVipEmail || user?.email !== "untamedfitapp@gmail.com") return;
+    
+    setVipLoading(true);
+    try {
+      const activeUser = localStorage.getItem("untamedActiveUser");
+      const response = await fetch('/api/vip-users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeUser && { "x-user-email": activeUser })
+        },
+        body: JSON.stringify({ email: newVipEmail })
+      });
+      
+      if (response.ok) {
+        const updatedUsers = await response.json();
+        setVipUsers(updatedUsers);
+        setNewVipEmail("");
+      }
+    } catch (error) {
+      console.error("Failed to add VIP user:", error);
+    } finally {
+      setVipLoading(false);
+    }
+  };
+
+  const removeVipUser = async (email: string) => {
+    if (user?.email !== "untamedfitapp@gmail.com") return;
+    
+    setVipLoading(true);
+    try {
+      const activeUser = localStorage.getItem("untamedActiveUser");
+      const response = await fetch(`/api/vip-users/${encodeURIComponent(email)}`, {
+        method: 'DELETE',
+        headers: activeUser ? { "x-user-email": activeUser } : {}
+      });
+      
+      if (response.ok) {
+        const updatedUsers = await response.json();
+        setVipUsers(updatedUsers);
+      }
+    } catch (error) {
+      console.error("Failed to remove VIP user:", error);
+    } finally {
+      setVipLoading(false);
     }
   };
 
   const isOwner = user?.email === "untamedfitapp@gmail.com";
-  const isVip = isOwner || vipUsers.includes(user?.email || "");
+  const isVip = isOwner || user?.isVIP || vipUsers.includes(user?.email || "");
+  const getUserBadge = () => {
+    if (isOwner) return { text: "OWNER", color: "bg-accent text-black", icon: Crown };
+    if (isVip) return { text: "VIP", color: "bg-yellow-500 text-black", icon: Crown };
+    return { text: "FREE ACCOUNT", color: "bg-gray-500 text-white", icon: User };
+  };
+  const userBadge = getUserBadge();
 
   return (
     <Layout>
@@ -93,76 +151,21 @@ export default function Settings() {
             <p className="text-silver mt-2 uppercase tracking-widest text-sm">Customize your experience</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - VIP Users Section */}
-            {isOwner && (
-              <div className="lg:col-span-1 space-y-4">
-                <Card className="glass-panel border-white/5 rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-white font-bold uppercase tracking-wider flex items-center gap-2">
-                      <Crown className="w-5 h-5 text-accent" />
-                      VIP Users
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-white font-bold uppercase tracking-wider text-xs">Add VIP User</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          value={newVipEmail}
-                          onChange={(e) => setNewVipEmail(e.target.value)}
-                          type="email"
-                          className="bg-white/10 border-white/20 text-white"
-                          placeholder="Enter email"
-                        />
-                        <Button 
-                          onClick={addVipUser}
-                          className="bg-accent text-black hover:bg-accent/80"
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-white font-bold uppercase tracking-wider text-xs">Current VIP Users</Label>
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {vipUsers.map((email, index) => (
-                          <div key={index} className="flex items-center justify-between bg-white/5 rounded p-2">
-                            <span className="text-white text-sm">{email}</span>
-                            <Button
-                              onClick={() => removeVipUser(email)}
-                              variant="outline"
-                              size="sm"
-                              className="text-red-400 border-red-400/30 hover:bg-red-400/10"
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Middle Column - Main Settings */}
-            <div className={`${isOwner ? 'lg:col-span-1' : 'lg:col-span-2'} space-y-4`}>
-              {/* Profile Section */}
-              <Card className="glass-panel border-white/5 rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="text-white font-bold uppercase tracking-wider flex items-center gap-2">
-                    <User className="text-primary w-5 h-5" />
-                    PROFILE
-                    {isOwner && (
-                      <span className="ml-2 px-2 py-1 bg-accent text-black text-xs rounded font-bold">
-                        OWNER
-                      </span>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
+          <div className="space-y-6">
+            {/* Profile Section - Horizontal Layout */}
+            <Card className="glass-panel border-white/5 rounded-2xl">
+              <CardHeader>
+                <CardTitle className="text-white font-bold uppercase tracking-wider flex items-center gap-2">
+                  <User className="text-primary w-5 h-5" />
+                  PROFILE
+                  <span className={`ml-2 px-2 py-1 ${userBadge.color} text-xs rounded font-bold flex items-center gap-1`}>
+                    <userBadge.icon className="w-3 h-3" />
+                    {userBadge.text}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Name</Label>
                     <Input 
@@ -183,6 +186,15 @@ export default function Settings() {
                     />
                   </div>
                   <div>
+                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Birthday</Label>
+                    <Input 
+                      value={profileData.birthday || ""} 
+                      onChange={(e) => handleProfileChange("birthday", e.target.value)}
+                      type="date"
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  <div>
                     <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">City</Label>
                     <Input 
                       value={profileData.city || ""} 
@@ -199,16 +211,7 @@ export default function Settings() {
                       type="email"
                       className="bg-white/10 border-white/20 text-white"
                       placeholder="Your email"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Change Password</Label>
-                    <Input 
-                      value={accountData.password || ""} 
-                      onChange={(e) => handleAccountChange("password", e.target.value)}
-                      type="password"
-                      className="bg-white/10 border-white/20 text-white"
-                      placeholder="New password (leave blank to keep current)"
+                      disabled
                     />
                   </div>
                   <div>
@@ -228,8 +231,8 @@ export default function Settings() {
                   <div>
                     <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Main Fitness Goal</Label>
                     <select 
-                      value={profileData.mainFitnessGoal || ""} 
-                      onChange={(e) => handleProfileChange("mainFitnessGoal", e.target.value)}
+                      value={profileData.fitnessGoal || ""} 
+                      onChange={(e) => handleProfileChange("fitnessGoal", e.target.value)}
                       className="w-full bg-white/10 border-white/20 text-white rounded p-2"
                     >
                       <option value="">Select your main goal</option>
@@ -241,6 +244,8 @@ export default function Settings() {
                       <option value="general-fitness">General Fitness</option>
                     </select>
                   </div>
+                </div>
+                <div className="mt-6">
                   <Button 
                     onClick={handleSaveProfile}
                     className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
@@ -248,77 +253,14 @@ export default function Settings() {
                     Save Profile Settings
                   </Button>
                   {profileSaved && (
-                    <p className="text-xs text-primary font-bold uppercase tracking-widest text-center">✓ Profile Saved</p>
+                    <p className="text-xs text-primary font-bold uppercase tracking-widest text-center mt-2">✓ Profile Saved</p>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Body Type Section */}
-              <Card className="glass-panel border-white/5 rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="text-white font-bold uppercase tracking-wider flex items-center gap-2">
-                    <User className="text-primary w-5 h-5" />
-                    BODY TYPE
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                  <div>
-                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Height</Label>
-                    <Input 
-                      value={profileData.height || ""} 
-                      onChange={(e) => handleProfileChange("height", e.target.value)}
-                      className="bg-white/10 border-white/20 text-white"
-                      placeholder="Enter your height (e.g., 5'10&quot;)"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Weight</Label>
-                    <Input 
-                      value={profileData.weight || ""} 
-                      onChange={(e) => handleProfileChange("weight", e.target.value)}
-                      className="bg-white/10 border-white/20 text-white"
-                      placeholder="Enter your weight (e.g., 180 lbs)"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Body Type Category</Label>
-                    <select 
-                      value={profileData.bodyType || ""} 
-                      onChange={(e) => handleProfileChange("bodyType", e.target.value)}
-                      className="w-full bg-white/10 border-white/20 text-white rounded p-2"
-                    >
-                      <option value="">Select body type</option>
-                      <option value="athletic">Athletic</option>
-                      <option value="lean">Lean</option>
-                      <option value="muscular">Muscular</option>
-                      <option value="curvy">Curvy</option>
-                      <option value="slim">Slim</option>
-                      <option value="average">Average</option>
-                      <option value="stocky">Stocky</option>
-                      <option value="plus-size">Plus-Size</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Limitations or Notes (Optional)</Label>
-                    <textarea 
-                      value={profileData.limitations || ""} 
-                      onChange={(e) => handleProfileChange("limitations", e.target.value)}
-                      className="w-full bg-white/10 border-white/20 text-white rounded p-2 h-20 resize-none"
-                      placeholder="Any physical limitations or notes you'd like the AI to consider (non-medical)"
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleSaveProfile}
-                    className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
-                  >
-                    Save Body Type Settings
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column - Accessibility & VIP Status */}
-            <div className="space-y-4">
+            {/* Three Boxes Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* VIP Status */}
               <Card className="glass-panel border-white/5 rounded-2xl">
                 <CardHeader>
@@ -356,12 +298,12 @@ export default function Settings() {
                 </CardContent>
               </Card>
 
-              {/* Accessibility Section */}
+              {/* Audio Cues */}
               <Card className="glass-panel border-white/5 rounded-2xl">
                 <CardHeader>
                   <CardTitle className="text-white font-bold uppercase tracking-wider flex items-center gap-2">
                     <Eye className="text-primary w-5 h-5" />
-                    ACCESSIBILITY
+                    AUDIO CUES
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-6">
@@ -385,9 +327,233 @@ export default function Settings() {
                       onCheckedChange={(val) => updateSettings.mutate({ voiceCues: !val })}
                     />
                   </div>
+                  
+                  <div className="space-y-4">
+                    <Label className="text-white font-bold uppercase tracking-wider text-xs">Weight Room Sounds</Label>
+                    <select 
+                      value={profileData.weightRoomSound || "hardcore"} 
+                      onChange={(e) => handleProfileChange("weightRoomSound", e.target.value)}
+                      className="w-full bg-white/10 border-white/20 text-white rounded p-2"
+                    >
+                      <option value="hardcore">Hardcore - Heavy Metal & Intense</option>
+                      <option value="zen">Zen - Peaceful & Focused</option>
+                      <option value="classic">Classic - Traditional Gym Sounds</option>
+                    </select>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => playWeightDrop(profileData.weightRoomSound || "hardcore")}
+                        className="text-white border-white/20 hover:bg-white/10"
+                      >
+                        🔊 Test Weight Drop
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => playRepComplete(profileData.weightRoomSound || "hardcore")}
+                        className="text-white border-white/20 hover:bg-white/10"
+                      >
+                        🔊 Test Rep Complete
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => playButtonClick(profileData.weightRoomSound || "hardcore")}
+                        className="text-white border-white/20 hover:bg-white/10"
+                      >
+                        🔊 Test Click
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-white font-bold uppercase tracking-wider text-xs">UI Interaction Sounds</Label>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">Button clicks, screen transitions</p>
+                      <Switch 
+                        checked={profileData.uiSounds !== false} 
+                        onCheckedChange={(val) => handleProfileChange("uiSounds", val)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-white font-bold uppercase tracking-wider text-xs">Master Volume</Label>
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs text-muted-foreground">🔇</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={profileData.masterVolume || 50}
+                        onChange={(e) => handleProfileChange("masterVolume", e.target.value)}
+                        className="flex-1 bg-white/10 border-white/20 rounded-lg h-2"
+                      />
+                      <span className="text-xs text-muted-foreground w-8 text-right">{profileData.masterVolume || 50}%</span>
+                    </div>
+                  </div>
+
+                  {/* Custom Sound Upload - VIP Only */}
+                  {isVip && (
+                    <div className="space-y-4 p-4 bg-white/5 rounded-lg border border-yellow-500/30">
+                      <Label className="text-yellow-400 font-bold uppercase tracking-wider text-xs flex items-center gap-2">
+                        <Crown className="w-3 h-3" />
+                        VIP FEATURE - CUSTOM SOUNDS
+                      </Label>
+                      <div className="space-y-2">
+                        <p className="text-xs text-white/80">Upload your own sound effects (MP3, WAV)</p>
+                        <div className="flex gap-2">
+                          <Input
+                            type="file"
+                            accept=".mp3,.wav"
+                            className="bg-white/10 border-white/20 text-white text-xs flex-1"
+                            disabled={!isVip}
+                            placeholder={isVip ? "Choose sound file" : "VIP users only"}
+                          />
+                          <Button
+                            size="sm"
+                            className="bg-yellow-500 text-black hover:bg-yellow-400 disabled:opacity-50"
+                            disabled={!isVip}
+                          >
+                            Upload
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!isVip && (
+                    <div className="text-center p-4 bg-white/5 rounded-lg border border-gray-500/30">
+                      <p className="text-xs text-gray-400 flex items-center justify-center gap-2">
+                        <Crown className="w-3 h-3" />
+                        Upgrade to VIP to unlock custom sound uploads
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* VIP Users Management - Only for Owner */}
+              {isOwner && (
+                <Card className="glass-panel border-white/5 rounded-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-white font-bold uppercase tracking-wider flex items-center gap-2">
+                      <Crown className="w-5 h-5 text-accent" />
+                      VIP USERS
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-white font-bold uppercase tracking-wider text-xs">Add VIP User</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={newVipEmail}
+                          onChange={(e) => setNewVipEmail(e.target.value)}
+                          type="email"
+                          className="bg-white/10 border-white/20 text-white flex-1"
+                          placeholder="Enter email"
+                        />
+                        <Button 
+                          onClick={addVipUser}
+                          disabled={vipLoading}
+                          className="bg-accent text-black hover:bg-accent/80"
+                        >
+                          {vipLoading ? "..." : "Add"}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-white font-bold uppercase tracking-wider text-xs">Current VIP Users</Label>
+                      <div className="space-y-1 max-h-24 overflow-y-auto">
+                        {vipUsers.map((email, index) => (
+                          <div key={index} className="flex items-center justify-between bg-white/5 rounded p-2">
+                            <span className="text-white text-xs truncate flex-1">{email}</span>
+                            <Button
+                              onClick={() => removeVipUser(email)}
+                              disabled={vipLoading}
+                              variant="outline"
+                              size="sm"
+                              className="text-red-400 border-red-400/30 hover:bg-red-400/10 ml-2"
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
+
+            {/* Body Type Section - Full Width Below */}
+            <Card className="glass-panel border-white/5 rounded-2xl">
+              <CardHeader>
+                <CardTitle className="text-white font-bold uppercase tracking-wider flex items-center gap-2">
+                  <User className="text-primary w-5 h-5" />
+                  BODY TYPE
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Height</Label>
+                    <Input 
+                      value={profileData.height || ""} 
+                      onChange={(e) => handleProfileChange("height", e.target.value)}
+                      className="bg-white/10 border-white/20 text-white"
+                      placeholder="Enter your height (e.g., 5 feet 10 inches)"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Weight</Label>
+                    <Input 
+                      value={profileData.weight || ""} 
+                      onChange={(e) => handleProfileChange("weight", e.target.value)}
+                      className="bg-white/10 border-white/20 text-white"
+                      placeholder="Enter your weight (e.g., 180 lbs)"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Body Type</Label>
+                    <select 
+                      value={profileData.bodyType || ""} 
+                      onChange={(e) => handleProfileChange("bodyType", e.target.value)}
+                      className="w-full bg-white/10 border-white/20 text-white rounded p-2"
+                    >
+                      <option value="">Select body type</option>
+                      <option value="athletic">Athletic</option>
+                      <option value="lean">Lean</option>
+                      <option value="muscular">Muscular</option>
+                      <option value="curvy">Curvy</option>
+                      <option value="slim">Slim</option>
+                      <option value="average">Average</option>
+                      <option value="stocky">Stocky</option>
+                      <option value="plus-size">Plus-Size</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label className="text-white font-bold uppercase tracking-wider text-xs mb-2 block">Limitations</Label>
+                    <textarea 
+                      value={profileData.limitations || ""} 
+                      onChange={(e) => handleProfileChange("limitations", e.target.value)}
+                      className="w-full bg-white/10 border-white/20 text-white rounded p-2 h-16 resize-none"
+                      placeholder="Any limitations (optional)"
+                    />
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <Button 
+                    onClick={handleSaveProfile}
+                    className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
+                  >
+                    Save Body Type Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

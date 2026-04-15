@@ -20,7 +20,7 @@ export default function BodyTypeSetup() {
 
   React.useEffect(() => {
     if (!isAuthenticated()) {
-      window.location.href = "/auth";
+      window.location.href = "/login";
     }
   }, []);
 
@@ -45,7 +45,7 @@ export default function BodyTypeSetup() {
 
   const handleLogout = () => {
     logoutUser();
-    window.location.href = "/auth";
+    window.location.href = "/login";
   };
 
   return (

@@ -5,8 +5,15 @@ export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, settings: Partial<User>): Promise<User>;
+
+  // VIP User Management
+  getVipUsers(): Promise<string[]>;
+  addVipUser(email: string): Promise<void>;
+  removeVipUser(email: string): Promise<void>;
+  isVipUser(email: string): Promise<boolean>;
 
   // Workouts
   getWorkouts(): Promise<Workout[]>;
@@ -44,6 +51,27 @@ export class DatabaseStorage implements IStorage {
 
   async updateUser(id: number, settings: Partial<User>): Promise<User> {
     return memoryStorage.updateUser(id, settings);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return memoryStorage.getUserByEmail(email);
+  }
+
+  // VIP User Management
+  async getVipUsers(): Promise<string[]> {
+    return memoryStorage.getVipUsers();
+  }
+
+  async addVipUser(email: string): Promise<void> {
+    return memoryStorage.addVipUser(email);
+  }
+
+  async removeVipUser(email: string): Promise<void> {
+    return memoryStorage.removeVipUser(email);
+  }
+
+  async isVipUser(email: string): Promise<boolean> {
+    return memoryStorage.isVipUser(email);
   }
 
   // Workouts

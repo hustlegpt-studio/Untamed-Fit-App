@@ -29,7 +29,7 @@ export default function UntamedStudio() {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      window.location.href = "/auth";
+      window.location.href = "/login";
       return;
     }
     if (!isOwner()) {

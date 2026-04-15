@@ -10,6 +10,8 @@ import { isAuthenticated } from "@/utils/auth";
 
 import Splash from "@/pages/Splash";
 import Auth from "@/pages/Auth";
+import Login from "@/pages/Login";
+import Signup from "@/pages/Signup";
 import GoalsSetup from "@/pages/GoalsSetup";
 import BodyTypeSetup from "@/pages/BodyTypeSetup";
 import Dashboard from "@/pages/Dashboard";
@@ -37,60 +39,66 @@ function Router() {
       <Route path="/auth">
         {authenticated ? <Redirect to="/dashboard" /> : <Auth />}
       </Route>
+      <Route path="/login">
+        {authenticated ? <Redirect to="/dashboard" /> : <Login />}
+      </Route>
+      <Route path="/signup">
+        {authenticated ? <Redirect to="/dashboard" /> : <Signup />}
+      </Route>
       
       {/* Onboarding flow */}
       <Route path="/goals-setup">
-        {!authenticated ? <Redirect to="/auth" /> : <GoalsSetup />}
+        {!authenticated ? <Redirect to="/login" /> : <GoalsSetup />}
       </Route>
       <Route path="/body-type-setup">
-        {!authenticated ? <Redirect to="/auth" /> : <BodyTypeSetup />}
+        {!authenticated ? <Redirect to="/login" /> : <BodyTypeSetup />}
       </Route>
 
       {/* Protected routes */}
       <Route path="/dashboard">
-        {!authenticated ? <Redirect to="/auth" /> : <Dashboard />}
+        {!authenticated ? <Redirect to="/login" /> : <Dashboard />}
       </Route>
       <Route path="/workouts">
-        {!authenticated ? <Redirect to="/auth" /> : <Workouts />}
+        {!authenticated ? <Redirect to="/login" /> : <Workouts />}
       </Route>
       <Route path="/workouts/:id">
-        {!authenticated ? <Redirect to="/auth" /> : <WorkoutDetail />}
+        {!authenticated ? <Redirect to="/login" /> : <WorkoutDetail />}
       </Route>
       <Route path="/workout-with-kevin">
-        {!authenticated ? <Redirect to="/auth" /> : <WorkoutWithKevin />}
+        {!authenticated ? <Redirect to="/login" /> : <WorkoutWithKevin />}
       </Route>
       <Route path="/ask-kevin">
-        {!authenticated ? <Redirect to="/auth" /> : <AskKevin />}
+        {!authenticated ? <Redirect to="/login" /> : <AskKevin />}
       </Route>
       <Route path="/challenges">
-        {!authenticated ? <Redirect to="/auth" /> : <Challenges />}
+        {!authenticated ? <Redirect to="/login" /> : <Challenges />}
       </Route>
       <Route path="/workout-history">
-        {!authenticated ? <Redirect to="/auth" /> : <WorkoutHistory />}
+        {!authenticated ? <Redirect to="/login" /> : <WorkoutHistory />}
       </Route>
       <Route path="/workout-calendar">
-        {!authenticated ? <Redirect to="/auth" /> : <WorkoutCalendar />}
+        {!authenticated ? <Redirect to="/login" /> : <WorkoutCalendar />}
       </Route>
       <Route path="/profile-settings">
-        {!authenticated ? <Redirect to="/auth" /> : <ProfileSettings />}
+        {!authenticated ? <Redirect to="/login" /> : <ProfileSettings />}
       </Route>
       <Route path="/untamed-studio">
-        {!authenticated ? <Redirect to="/auth" /> : <UntamedStudio />}
+        {!authenticated ? <Redirect to="/login" /> : <UntamedStudio />}
       </Route>
       <Route path="/progress">
-        {!authenticated ? <Redirect to="/auth" /> : <Progress />}
+        {!authenticated ? <Redirect to="/login" /> : <Progress />}
       </Route>
       <Route path="/settings">
-        {!authenticated ? <Redirect to="/auth" /> : <Settings />}
+        {!authenticated ? <Redirect to="/login" /> : <Settings />}
       </Route>
       <Route path="/merch">
-        {!authenticated ? <Redirect to="/auth" /> : <Merch />}
+        {!authenticated ? <Redirect to="/login" /> : <Merch />}
       </Route>
       <Route path="/kg-playlists">
-        {!authenticated ? <Redirect to="/auth" /> : <KGPlaylists />}
+        {!authenticated ? <Redirect to="/login" /> : <KGPlaylists />}
       </Route>
       <Route path="/book-session">
-        {!authenticated ? <Redirect to="/auth" /> : <BookSession />}
+        {!authenticated ? <Redirect to="/login" /> : <BookSession />}
       </Route>
       
       <Route component={NotFound} />
