@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useUpdateSettings } from "@/hooks/use-settings";
 import { getCurrentUserProfile, updateUserProfile } from "@/utils/auth";
 import { DEFAULT_SOUNDS, playWeightDrop, playButtonClick, playRepComplete } from "@/utils/audio";
-import { Settings as SettingsIcon, Bell, Eye, CreditCard, Info, LogOut, User, Crown, Mail, Lock, Calendar, Volume2 } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Eye, CreditCard, Info, LogOut, User, Crown, Mail, Lock, Calendar, Volume2, ArrowLeft } from "lucide-react";
 
 export default function Settings() {
   const { data: user } = useAuth();
@@ -49,7 +49,26 @@ export default function Settings() {
 
   const handleSaveProfile = () => {
     try {
-      updateUserProfile(profileData);
+      // Ensure all profile fields are saved
+      const allProfileData = {
+        ...profileData,
+        // Explicitly ensure these fields are included
+        name: profileData.name || "",
+        age: profileData.age || "",
+        birthday: profileData.birthday || "",
+        city: profileData.city || "",
+        experienceLevel: profileData.experienceLevel || "",
+        fitnessGoal: profileData.fitnessGoal || "",
+        height: profileData.height || "",
+        weight: profileData.weight || "",
+        bodyType: profileData.bodyType || "",
+        limitations: profileData.limitations || "",
+        weightRoomSound: profileData.weightRoomSound || "hardcore",
+        uiSounds: profileData.uiSounds !== false,
+        masterVolume: profileData.masterVolume || 50
+      };
+      
+      updateUserProfile(allProfileData);
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 3000);
     } catch (error) {
@@ -144,11 +163,21 @@ export default function Settings() {
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-display font-black text-white mb-2">
-              <span className="text-primary text-glow">SETTINGS</span>
-            </h1>
-            <p className="text-silver mt-2 uppercase tracking-widest text-sm">Customize your experience</p>
+          <div className="flex items-center justify-between mb-8">
+            <Button
+              onClick={() => window.history.back()}
+              className="bg-primary text-black hover:bg-primary/80 rounded-full font-bold uppercase tracking-wider flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-primary-glow">BACK</span>
+            </Button>
+            <div className="text-center flex-1">
+              <h1 className="text-4xl md:text-5xl font-display font-black text-white mb-2">
+                <span className="text-primary text-glow">SETTINGS</span>
+              </h1>
+              <p className="text-silver mt-2 uppercase tracking-widest text-sm">Customize your experience</p>
+            </div>
+            <div className="w-20"></div> {/* Spacer for centering */}
           </div>
 
           <div className="space-y-6">
@@ -248,7 +277,7 @@ export default function Settings() {
                 <div className="mt-6">
                   <Button 
                     onClick={handleSaveProfile}
-                    className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
+                    className="w-full bg-primary text-black hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
                   >
                     Save Profile Settings
                   </Button>
@@ -547,7 +576,7 @@ export default function Settings() {
                 <div className="mt-6">
                   <Button 
                     onClick={handleSaveProfile}
-                    className="w-full bg-primary text-white hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
+                    className="w-full bg-primary text-black hover:bg-primary/80 rounded-xl font-bold uppercase tracking-widest h-10"
                   >
                     Save Body Type Settings
                   </Button>

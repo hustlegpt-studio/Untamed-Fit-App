@@ -1,0 +1,407 @@
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Layout } from "@/components/Layout";
+import { Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat, Heart, MoreHorizontal, ChevronLeft, ChevronRight, List, Home, Search, Library, Radio, Music } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+
+interface Playlist {
+  id: string;
+  title: string;
+  url: string;
+  coverUrl: string;
+  energy: number;
+  tags: string[];
+  duration: string;
+  isPremium?: boolean;
+  category: string;
+}
+
+const playlists: Playlist[] = [
+  {
+    id: "untamed-fitness",
+    title: "Untamed Fitness",
+    url: "https://open.spotify.com/playlist/69p9UJnze06a8hf1ppTHj1?si=FS8MPcUaTTq_beIv52wM7A&pi=KnfHt7OESYeNY&nd=1&dlsi=4b09afab0d654272",
+    coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop",
+    energy: 5,
+    tags: ["Full Body", "HIIT", "Strength"],
+    duration: "2h 14m",
+    isPremium: true,
+    category: "Untamed Signature Mixes",
+  },
+  {
+    id: "military-monday",
+    title: "Military Monday",
+    url: "https://open.spotify.com/playlist/3birA7raRHqAsduSan6M1e?si=57zJqCfxTs2M-HPbOm2ddg&pi=1eeO1DcYSESfb",
+    coverUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300&h=300&fit=crop",
+    energy: 5,
+    tags: ["Cardio", "Intensity", "Endurance"],
+    duration: "1h 58m",
+    category: "Intensity Boosters",
+  },
+  {
+    id: "beast-mode",
+    title: "Beast Mode Bootcamp",
+    url: "https://open.spotify.com/playlist/3birA7raRHqAsduSan6M1e?si=57zJqCfxTs2M-HPbOm2ddg&pi=1eeO1DcYSESfb",
+    coverUrl: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=300&h=300&fit=crop",
+    energy: 5,
+    tags: ["Heavy", "Strength", "Power"],
+    duration: "2h 45m",
+    category: "Intensity Boosters",
+  },
+  {
+    id: "zen-party",
+    title: "Zen Party",
+    url: "https://open.spotify.com/playlist/6lTJBDYBVZf7vlBacC0Oww?si=n2Dq1CZBTbiSV9qTbQr1qg&pi=pnjWoUcnTjCRo",
+    coverUrl: "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=300&h=300&fit=crop",
+    energy: 2,
+    tags: ["Recovery", "Focus", "Mindfulness"],
+    duration: "1h 32m",
+    category: "Mindset & Focus",
+  },
+];
+
+export default function MusicPlayer() {
+  const { data: user } = useAuth();
+  const [isPremium] = useState(user?.subscriptionTier === "pro" || user?.subscriptionTier === "elite");
+  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(70);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState("0:00");
+  const [duration, setDuration] = useState("0:00");
+  const [isShuffleOn, setIsShuffleOn] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<'off' | 'one' | 'all'>('off');
+  const [isLiked, setIsLiked] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    // Get playlist from URL params or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const playlistId = urlParams.get('playlist');
+    
+    if (playlistId) {
+      const playlist = playlists.find(p => p.id === playlistId);
+      if (playlist) {
+        setCurrentPlaylist(playlist);
+      }
+    }
+  }, []);
+
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleSkipNext = () => {
+    const currentIndex = playlists.findIndex(p => p.id === currentPlaylist?.id);
+    const nextIndex = isShuffleOn 
+      ? Math.floor(Math.random() * playlists.length)
+      : (currentIndex + 1) % playlists.length;
+    setCurrentPlaylist(playlists[nextIndex]);
+  };
+
+  const handleSkipPrevious = () => {
+    const currentIndex = playlists.findIndex(p => p.id === currentPlaylist?.id);
+    const prevIndex = isShuffleOn 
+      ? Math.floor(Math.random() * playlists.length)
+      : (currentIndex - 1 + playlists.length) % playlists.length;
+    setCurrentPlaylist(playlists[prevIndex]);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVolume(Number(e.target.value));
+  };
+
+  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProgress(Number(e.target.value));
+  };
+
+  const toggleRepeat = () => {
+    const modes: ('off' | 'one' | 'all')[] = ['off', 'one', 'all'];
+    const currentIndex = modes.indexOf(repeatMode);
+    setRepeatMode(modes[(currentIndex + 1) % modes.length]);
+  };
+
+  const Sidebar = () => (
+    <motion.div
+      initial={{ x: -300 }}
+      animate={{ x: sidebarOpen ? 0 : -300 }}
+      className="w-64 h-full bg-black/50 backdrop-blur-lg border-r border-gray-800 flex flex-col"
+    >
+      {/* Logo */}
+      <div className="p-6 border-b border-gray-800">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-primary to-green-600 rounded-lg flex items-center justify-center">
+            <Music className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-white font-bold text-lg">UNTAMED</h1>
+            <p className="text-gray-400 text-xs">FITNESS</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4">
+        <div className="space-y-2">
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors">
+            <Home className="w-5 h-5" />
+            <span className="font-medium">Home</span>
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors">
+            <Search className="w-5 h-5" />
+            <span className="font-medium">Search</span>
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors">
+            <Library className="w-5 h-5" />
+            <span className="font-medium">Your Library</span>
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+            <Radio className="w-5 h-5" />
+            <span className="font-medium">Radio</span>
+          </button>
+        </div>
+
+        {/* Playlists Section */}
+        <div className="mt-8">
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4 px-4">KG's Playlists</h3>
+          <div className="space-y-1">
+            {playlists.map((playlist) => (
+              <button
+                key={playlist.id}
+                onClick={() => setCurrentPlaylist(playlist)}
+                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-left ${
+                  currentPlaylist?.id === playlist.id
+                    ? 'bg-primary/20 text-primary'
+                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <img
+                  src={playlist.coverUrl}
+                  alt={playlist.title}
+                  className="w-8 h-8 rounded object-cover"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{playlist.title}</p>
+                  <p className="text-xs text-gray-400">{playlist.category}</p>
+                </div>
+                {playlist.isPremium && (
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* Powered by Spotify */}
+      <div className="p-4 border-t border-gray-800">
+        <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
+          <span>Powered by</span>
+          <div className="w-16 h-4 bg-green-500 rounded-sm flex items-center justify-center">
+            <span className="text-black text-xs font-bold">Spotify</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const MainContent = () => (
+    <div className="flex-1 flex flex-col bg-gradient-to-b from-gray-900 to-black">
+      {/* Top Bar */}
+      <div className="h-16 bg-black/50 backdrop-blur-lg border-b border-gray-800 flex items-center justify-between px-6">
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="text-white hover:text-primary transition-colors"
+        >
+          <ChevronRight className={`w-6 h-6 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
+        </button>
+        
+        <div className="flex items-center gap-4">
+          <button className="text-white hover:text-primary transition-colors">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button className="text-white hover:text-primary transition-colors">
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button className="text-white hover:text-primary transition-colors">
+            <List className="w-6 h-6" />
+          </button>
+          <button className="text-white hover:text-primary transition-colors">
+            <MoreHorizontal className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 flex">
+        {/* Playlist Info */}
+        <div className="flex-1 p-8">
+          {currentPlaylist ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-4xl"
+            >
+              <div className="flex items-start gap-8 mb-8">
+                <img
+                  src={currentPlaylist.coverUrl}
+                  alt={currentPlaylist.title}
+                  className="w-64 h-64 rounded-lg shadow-2xl object-cover"
+                />
+                <div className="flex-1">
+                  <h1 className="text-4xl font-bold text-white mb-4">{currentPlaylist.title}</h1>
+                  <p className="text-gray-300 mb-4">{currentPlaylist.category}</p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {currentPlaylist.tags.map((tag) => (
+                      <span key={tag} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4 text-gray-400">
+                    <span>{currentPlaylist.duration}</span>
+                    <span>Energy: {currentPlaylist.energy}/5</span>
+                    {currentPlaylist.isPremium && (
+                      <span className="px-2 py-1 bg-yellow-500/20 text-yellow-500 rounded text-xs font-bold">
+                        PREMIUM
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Player Controls */}
+              <div className="bg-black/30 backdrop-blur-lg rounded-lg p-6 border border-gray-800">
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={progress}
+                    onChange={handleProgressChange}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>{currentTime}</span>
+                    <span>{duration}</span>
+                  </div>
+                </div>
+
+                {/* Control Buttons */}
+                <div className="flex items-center justify-center gap-6 mb-6">
+                  <button
+                    onClick={() => setIsShuffleOn(!isShuffleOn)}
+                    className={`p-2 rounded-full transition-colors ${
+                      isShuffleOn ? 'text-primary' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Shuffle className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handleSkipPrevious}
+                    className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  >
+                    <SkipBack className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={handlePlayPause}
+                    className="p-4 rounded-full bg-primary hover:bg-primary/80 text-black transition-colors"
+                  >
+                    {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 fill-current" />}
+                  </button>
+                  <button
+                    onClick={handleSkipNext}
+                    className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  >
+                    <SkipForward className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={toggleRepeat}
+                    className={`p-2 rounded-full transition-colors ${
+                      repeatMode !== 'off' ? 'text-primary' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Repeat className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Additional Controls */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setIsLiked(!isLiked)}
+                    className={`p-2 rounded-full transition-colors ${
+                      isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                  </button>
+                  
+                  <div className="flex items-center gap-3">
+                    <Volume2 className="w-5 h-5 text-gray-400" />
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={volume}
+                      onChange={handleVolumeChange}
+                      className="w-24 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="text-gray-400 text-sm w-8">{volume}%</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-white mb-2">No Playlist Selected</h2>
+                <p className="text-gray-400">Choose a playlist from the sidebar to start listening</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Spotify Embed */}
+      {currentPlaylist && (
+        <div className="absolute bottom-0 right-0 w-96 h-64 bg-black/80 backdrop-blur-lg border border-gray-800 rounded-tl-lg">
+          <div className="p-4 border-b border-gray-800">
+            <div className="flex items-center justify-between">
+              <h3 className="text-white font-bold">Spotify Player</h3>
+              <div className="flex items-center gap-2 text-green-500 text-xs">
+                <span>Powered by</span>
+                <div className="w-12 h-3 bg-green-500 rounded-sm flex items-center justify-center">
+                  <span className="text-black text-xs font-bold">Spotify</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <iframe
+            src={`https://open.spotify.com/embed/playlist/${currentPlaylist.url.split('/').pop()?.split('?')[0]}?utm_source=generator&theme=0`}
+            width="100%"
+            height="152"
+            frameBorder="0"
+            allowFullScreen=""
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            className="rounded-bl-lg"
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <Layout>
+      <div className="h-screen bg-black flex overflow-hidden">
+        <Sidebar />
+        <MainContent />
+      </div>
+    </Layout>
+  );
+}

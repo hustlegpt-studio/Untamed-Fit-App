@@ -27,7 +27,8 @@ import WorkoutHistory from "@/pages/WorkoutHistory";
 import WorkoutCalendar from "@/pages/WorkoutCalendar";
 import ProfileSettings from "@/pages/ProfileSettings";
 import UntamedStudio from "@/pages/UntamedStudio";
-import KGPlaylists from "@/pages/KGPlaylists";
+import KGPlaylists from "./pages/KGPlaylists";
+import MusicPlayer from "./pages/MusicPlayer";
 import BookSession from "@/pages/BookSession";
 
 function Router() {
@@ -96,6 +97,9 @@ function Router() {
       </Route>
       <Route path="/kg-playlists">
         {!authenticated ? <Redirect to="/login" /> : <KGPlaylists />}
+      </Route>
+      <Route path="/music-player">
+        {!authenticated ? <Redirect to="/login" /> : <MusicPlayer />}
       </Route>
       <Route path="/book-session">
         {!authenticated ? <Redirect to="/login" /> : <BookSession />}

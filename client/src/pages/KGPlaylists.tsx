@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
 import { Play, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 
 interface Playlist {
   id: string;
@@ -61,14 +62,19 @@ const playlists: Playlist[] = [
 ];
 
 const PlaylistCard = ({ playlist, isPremium }: { playlist: Playlist; isPremium: boolean }) => {
+  const [, setLocation] = useLocation();
+  
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setLocation(`/music-player?playlist=${playlist.id}`);
+  };
+
   return (
-    <motion.a
-      href={playlist.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group relative block rounded-2xl overflow-hidden bg-white border-2 border-green-500 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/30 h-full"
+    <motion.div
+      className="group relative block rounded-2xl overflow-hidden bg-white border-2 border-green-500 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/30 h-full cursor-pointer"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
+      onClick={handlePlayClick}
     >
       {/* Blurred Background */}
       <div
@@ -88,7 +94,7 @@ const PlaylistCard = ({ playlist, isPremium }: { playlist: Playlist; isPremium: 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            {isPremium ? "🔓 Premium" : <><Lock className="w-3 h-3" /> Premium</>}
+            {isPremium ? "Premium" : <span><Lock className="w-3 h-3" /> Premium</span>}
           </motion.div>
         )}
 
@@ -150,7 +156,7 @@ const PlaylistCard = ({ playlist, isPremium }: { playlist: Playlist; isPremium: 
         {/* Duration */}
         <p className="text-xs text-gray-600 font-semibold">{playlist.duration}</p>
       </div>
-    </motion.a>
+    </motion.div>
   );
 };
 
