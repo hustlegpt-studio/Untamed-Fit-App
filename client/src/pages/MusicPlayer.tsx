@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
-import { Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat, Heart, MoreHorizontal, ChevronLeft, ChevronRight, List, Home, Search, Library, Radio, Music } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat, Heart, MoreHorizontal, ChevronLeft, ChevronRight, List, Home, Search, Library, Radio, Music, Minimize2, Maximize2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 interface Playlist {
@@ -73,6 +73,7 @@ export default function MusicPlayer() {
   const [repeatMode, setRepeatMode] = useState<'off' | 'one' | 'all'>('off');
   const [isLiked, setIsLiked] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMiniPlayer, setIsMiniPlayer] = useState(false);
 
   useEffect(() => {
     // Get playlist from URL params or localStorage
@@ -273,86 +274,39 @@ export default function MusicPlayer() {
                 </div>
               </div>
 
-              {/* Player Controls */}
+              {/* Spotify Player */}
               <div className="bg-black/30 backdrop-blur-lg rounded-lg p-6 border border-gray-800">
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={progress}
-                    onChange={handleProgressChange}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-bold text-lg">Spotify Player</h3>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setIsMiniPlayer(!isMiniPlayer)}
+                      className="flex items-center gap-2 px-3 py-1 bg-primary/20 text-primary rounded-full text-xs font-bold hover:bg-primary/30 transition-colors"
+                    >
+                      {isMiniPlayer ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+                      <span>{isMiniPlayer ? 'Large Player' : 'Mini Player'}</span>
+                    </button>
+                    <div className="flex items-center gap-2 text-green-500 text-xs">
+                      <span>Powered by</span>
+                      <div className="w-12 h-3 bg-green-500 rounded-sm flex items-center justify-center">
+                        <span className="text-black text-xs font-bold">Spotify</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {currentPlaylist && (
+                  <iframe
+                    src={`https://open.spotify.com/embed/playlist/${currentPlaylist.url.split('/').pop()?.split('?')[0]}?utm_source=generator&theme=0`}
+                    width="100%"
+                    height="380"
+                    frameBorder="0"
+                    allowFullScreen=""
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    className="rounded-lg bg-black"
                   />
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>{currentTime}</span>
-                    <span>{duration}</span>
-                  </div>
-                </div>
-
-                {/* Control Buttons */}
-                <div className="flex items-center justify-center gap-6 mb-6">
-                  <button
-                    onClick={() => setIsShuffleOn(!isShuffleOn)}
-                    className={`p-2 rounded-full transition-colors ${
-                      isShuffleOn ? 'text-primary' : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <Shuffle className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={handleSkipPrevious}
-                    className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-                  >
-                    <SkipBack className="w-6 h-6" />
-                  </button>
-                  <button
-                    onClick={handlePlayPause}
-                    className="p-4 rounded-full bg-primary hover:bg-primary/80 text-black transition-colors"
-                  >
-                    {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 fill-current" />}
-                  </button>
-                  <button
-                    onClick={handleSkipNext}
-                    className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-                  >
-                    <SkipForward className="w-6 h-6" />
-                  </button>
-                  <button
-                    onClick={toggleRepeat}
-                    className={`p-2 rounded-full transition-colors ${
-                      repeatMode !== 'off' ? 'text-primary' : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <Repeat className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Additional Controls */}
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => setIsLiked(!isLiked)}
-                    className={`p-2 rounded-full transition-colors ${
-                      isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                  </button>
-                  
-                  <div className="flex items-center gap-3">
-                    <Volume2 className="w-5 h-5 text-gray-400" />
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={volume}
-                      onChange={handleVolumeChange}
-                      className="w-24 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <span className="text-gray-400 text-sm w-8">{volume}%</span>
-                  </div>
-                </div>
+                )}
               </div>
             </motion.div>
           ) : (
@@ -367,40 +321,65 @@ export default function MusicPlayer() {
         </div>
       </div>
 
-      {/* Spotify Embed */}
-      {currentPlaylist && (
-        <div className="absolute bottom-0 right-0 w-96 h-64 bg-black/80 backdrop-blur-lg border border-gray-800 rounded-tl-lg">
-          <div className="p-4 border-b border-gray-800">
-            <div className="flex items-center justify-between">
-              <h3 className="text-white font-bold">Spotify Player</h3>
-              <div className="flex items-center gap-2 text-green-500 text-xs">
-                <span>Powered by</span>
-                <div className="w-12 h-3 bg-green-500 rounded-sm flex items-center justify-center">
-                  <span className="text-black text-xs font-bold">Spotify</span>
-                </div>
-              </div>
-            </div>
           </div>
+  );
+
+  const MiniPlayer = () => {
+  if (!currentPlaylist) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="fixed bottom-4 right-4 w-80 h-32 bg-black/90 backdrop-blur-lg border border-gray-800 rounded-lg shadow-2xl z-50"
+      style={{
+        // Make draggable
+        position: 'fixed',
+        cursor: 'move'
+      }}
+    >
+      <div className="p-3 h-full flex items-center gap-3">
+        {/* Cover Image */}
+        <img
+          src={currentPlaylist.coverUrl}
+          alt={currentPlaylist.title}
+          className="w-16 h-16 rounded object-cover"
+        />
+        
+        {/* Info and Controls */}
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-white text-sm font-bold truncate">{currentPlaylist.title}</h4>
+            <button
+              onClick={() => setIsMiniPlayer(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+          </div>
+          
+          {/* Mini Spotify Embed */}
           <iframe
             src={`https://open.spotify.com/embed/playlist/${currentPlaylist.url.split('/').pop()?.split('?')[0]}?utm_source=generator&theme=0`}
             width="100%"
-            height="152"
+            height="80"
             frameBorder="0"
             allowFullScreen=""
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
-            className="rounded-bl-lg"
+            className="rounded bg-black"
           />
         </div>
-      )}
-    </div>
+      </div>
+    </motion.div>
   );
+};
 
   return (
     <Layout>
       <div className="h-screen bg-black flex overflow-hidden">
         <Sidebar />
-        <MainContent />
+        {isMiniPlayer ? <MiniPlayer /> : <MainContent />}
       </div>
     </Layout>
   );
