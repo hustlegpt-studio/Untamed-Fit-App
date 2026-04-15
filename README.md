@@ -1,11 +1,31 @@
 # Untamed Fit - Migration from Replit to Local Development
 
 **Migration Date:** March 31, 2026  
-**Last Updated:** March 31, 2026  
+**Last Updated:** April 14, 2026  
 **Status:** Complete - App successfully running locally without Replit dependencies  
 
 ## Overview
 Successfully migrated the Untamed Fit full-stack application from Replit hosting to a local development environment. This involved removing all Replit-specific dependencies, replacing the PostgreSQL database with an in-memory storage solution, and resolving various build issues.
+
+## NEW: Server Port & Demo Message Update (April 14, 2026)
+
+### **Server Port Configuration**
+- **Primary Port:** Updated from port 3000 to port 9688
+- **Fallback Port:** Added port 90688 as automatic fallback
+- **Port Logic:** Automatic fallback if primary port is in use
+- **Environment:** Updated .env file to match server configuration
+
+### **Kevin Gilliam Demo Messages**
+- **Startup Message:** Custom branding with motivational quotes and emojis
+- **Shutdown Message:** Coach KG signature "And That's Bottom Line!!!!"
+- **Dynamic Display:** Shows actual running port (primary or fallback)
+- **Process Handlers:** Added SIGINT and SIGTERM handlers for graceful shutdown
+
+### **Files Modified**
+```
+server/index.ts - Updated port logic and added demo messages
+.env - Changed PORT from 3000 to 9688
+```
 
 ## NEW: Complete AI System & User Management Upgrade (March 31, 2026)
 

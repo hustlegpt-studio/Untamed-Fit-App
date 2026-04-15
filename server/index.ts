@@ -105,18 +105,89 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port specified in environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
+  // Kevin Gilliam Port Logic - Primary: 9688, Fallback: 90688
   // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "3000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "127.0.0.1",
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
+  const primaryPort = 9688;
+  const fallbackPort = 90688;
+  const port = parseInt(process.env.PORT || primaryPort.toString(), 10);
+
+  // Try primary port first, then fallback
+  const tryStartServer = (portToTry: number, isFallback: boolean = false) => {
+    httpServer.listen(
+      {
+        port: portToTry,
+        host: "127.0.0.1",
+      },
+      () => {
+        log(`serving on port ${portToTry}`);
+        
+        // Kevin Gilliam startup message
+        console.log('[express] I AM WHAT I AM');
+        console.log('[express] - DEDICATED \ud83d\udcb0\ud83d\udd11');
+        console.log('[express] - BEAST \ud83e\udd8d\ud83d\udc3a');
+        console.log('[express] - COMPETITIVE \ud83c\udfc0\ud83c\udfc8\ud83e\udd4a');
+        console.log('[express] - WARRIOR \ud83d\udcaa\ud83c\udffe\ud83d\udcaa\ud83c\udffe');
+        console.log('[express] - KING \ud83d\udc51\ud83d\udc51');
+        console.log('[express] - CLUTCH \u265e\ufe0f\u265e\ufe0f');
+        console.log('[express] - GREATNESS \ud83c\udfc6\ud83c\udfc6');
+        console.log('[express]');
+        console.log('[express] In Honor of My Brother From Another Kevin Gilliam!');
+        console.log('[express] More than just a cousin! My roll dawg 4 Life!');
+        console.log('[express] Born September 6, 1988 in Fort Worth, TX! \ud83d\udcaa\ud83c\udffe\ud83d\udcaa\ud83c\udffe');
+        console.log('[express] - Derrick Gilliam Sr. (\ud83c\udfa4\ud83c\udfc0\ud83e\ude96\ud83d\udcaa\ud83c\udffe)');
+        console.log('[express]');
+        console.log('[express] Primary Port: 9688');
+        console.log('[express] Fallback Port: 90688');
+        console.log('[express]');
+        if (isFallback) {
+          console.log('[express] Server running Untamed Fit by Kevin Gilliam on Fallback Port 90688 \ud83d\ude80\ud83c\udfc3\ud83c\udffe\u200d\u2642\ufe0f');
+        } else {
+          console.log('[express] Server running Untamed Fit by Kevin Gilliam on Port 9688 \ud83d\ude80\ud83c\udfc3\ud83c\udffe\u200d\u2642\ufe0f');
+        }
+      },
+    );
+    
+    httpServer.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE' && !isFallback) {
+        console.log(`[express] Port ${portToTry} in use, trying fallback port ${fallbackPort}...`);
+        tryStartServer(fallbackPort, true);
+      } else {
+        console.error('[express] Server failed to start:', err);
+        process.exit(1);
+      }
+    });
+  };
+
+  tryStartServer(port);
 })();
+
+// Server stop/shutdown handler
+process.on("SIGINT", () => {
+  console.log('[express] I AM WHAT I AM');
+  console.log('[express] - DEDICATED \ud83d\udcb0\ud83d\udd11');
+  console.log('[express] - BEAST \ud83e\udd8d\ud83d\udc3a');
+  console.log('[express] - COMPETITIVE \ud83c\udfc0\ud83c\udfc8\ud83e\udd4a');
+  console.log('[express] - WARRIOR \ud83d\udcaa\ud83c\udffe\ud83d\udcaa\ud83c\udffe');
+  console.log('[express] - KING \ud83d\udc51\ud83d\udc51');
+  console.log('[express] - CLUTCH \u265e\ufe0f\u265e\ufe0f');
+  console.log('[express] - GREATNESS \ud83c\udfc6\ud83c\udfc6');
+  console.log('[express]');
+  console.log('[express] \ud83d\uded1 Server Stopped');
+  console.log('[express] "And That\'s Bottom Line!!!!" - Coach KG');
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  console.log('[express] I AM WHAT I AM');
+  console.log('[express] - DEDICATED \ud83d\udcb0\ud83d\udd11');
+  console.log('[express] - BEAST \ud83e\udd8d\ud83d\udc3a');
+  console.log('[express] - COMPETITIVE \ud83c\udfc0\ud83c\udfc8\ud83e\udd4a');
+  console.log('[express] - WARRIOR \ud83d\udcaa\ud83c\udffe\ud83d\udcaa\ud83c\udffe');
+  console.log('[express] - KING \ud83d\udc51\ud83d\udc51');
+  console.log('[express] - CLUTCH \u265e\ufe0f\u265e\ufe0f');
+  console.log('[express] - GREATNESS \ud83c\udfc6\ud83c\udfc6');
+  console.log('[express]');
+  console.log('[express] \ud83d\uded1 Server Stopped');
+  console.log('[express] "And That\'s Bottom Line!!!!" - Coach KG');
+  process.exit(0);
+});
