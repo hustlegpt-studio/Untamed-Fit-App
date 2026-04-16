@@ -69,7 +69,18 @@ const MusicPlayerContent: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMiniPlayer, setIsMiniPlayer] = useState(false);
   
-  const { state, play, pause, next, previous, setVolume, seek, loadPlaylist, initialize } = useSpotifyPlayer();
+  const { 
+    state, 
+    play, 
+    pause, 
+    next, 
+    previous, 
+    seek, 
+    setVolume, 
+    loadPlaylist, 
+    initialize,
+    fallbackToEmbed 
+  } = useSpotifyPlayer();
 
   useEffect(() => {
     // Initialize Spotify player
@@ -300,65 +311,112 @@ const MusicPlayerContent: React.FC = () => {
                 
                 {state.isReady ? (
                   <div className="space-y-6">
+                    {/* Connect Spotify Button for unauthenticated users */}
+                    {!state.isUsingSDK && !state.error && (
+                      <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-white font-bold text-lg mb-2">Connect Spotify</h3>
+                            <p className="text-green-100 text-sm">Connect your Spotify account to enable full playback features</p>
+                          </div>
+                          <button
+                            onClick={() => window.location.href = '/api/spotify/login'}
+                            className="px-4 py-2 bg-green-500 text-black rounded-lg font-bold hover:bg-green-600 transition-colors"
+                          >
+                            Connect Spotify
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Error Message */}
                     {state.error && (
-                      <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3">
-                        <p className="text-yellow-500 text-sm">{state.error}</p>
+                      <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 mb-4">
+                        <p className="text-yellow-500 text-sm mb-2">{state.error}</p>
+                        {state.isUsingSDK && (
+                          <button
+                            onClick={() => fallbackToEmbed()}
+                            className="bg-green-500 hover:bg-green-600 text-black px-3 py-1 rounded text-sm transition-colors"
+                          >
+                            Switch to Embed Player
+                          </button>
+                        )}
                       </div>
                     )}
                     
                     {state.isUsingSDK ? (
                       // Web Playback SDK Interface
                       <>
-                        {/* Current Track Display */}
-                        {state.currentTrack && (
-                          <div className="flex items-center gap-4 p-4 bg-black/20 rounded-lg">
-                            <img
-                              src={state.currentTrack.imageUrl ?? 'https://via.placeholder.com/80'}
-                              alt={state.currentTrack.album}
-                              className="w-20 h-20 rounded-lg object-cover"
-                            />
-                            <div className="flex-1">
-                              <h4 className="text-white font-bold text-lg">{state.currentTrack.name}</h4>
-                              <p className="text-gray-400">{state.currentTrack.artist}</p>
-                              <p className="text-gray-500 text-sm">{state.currentTrack.album}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Progress Bar */}
-                        <div>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={state.duration ? (state.position / state.duration) * 100 : 0}
-                            onChange={handleProgressChange}
-                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                        {/* Album Art */}
+                        <div className="w-32 h-32 rounded-lg overflow-hidden mb-4 shadow-lg">
+                          <img
+                            src={state.currentTrack?.imageUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop'}
+                            alt="Album Art"
+                            className="w-full h-full object-cover"
                           />
-                          <div className="flex justify-between text-xs text-gray-400 mt-1">
+                        </div>
+
+                        {/* Track Info */}
+                        <div className="text-center mb-6">
+                          <h3 className="text-2xl font-bold text-white mb-2">
+                            {state.currentTrack?.name || 'No track playing'}
+                          </h3>
+                          <p className="text-gray-400 text-lg">
+                            {state.currentTrack?.artist || 'Unknown artist'}
+                          </p>
+                          <p className="text-gray-500 text-sm mt-1">
+                            {state.currentTrack?.album || 'Unknown album'}
+                          </p>
+                        </div>
+
+                        {/* Progress Bar with Seek */}
+                        <div className="mb-6">
+                          <div 
+                            className="relative h-2 bg-gray-700 rounded-full overflow-hidden mb-2 cursor-pointer"
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = e.clientX - rect.left;
+                              const percentage = x / rect.width;
+                              const newPosition = percentage * state.duration;
+                              seek(newPosition);
+                            }}
+                          >
+                            <div
+                              className="absolute top-0 left-0 h-full bg-green-500 transition-all duration-100"
+                              style={{ width: `${(state.position / state.duration) * 100}%` }}
+                            />
+                            <div 
+                              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg"
+                              style={{ left: `${(state.position / state.duration) * 100}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-400">
                             <span>{formatTime(state.position)}</span>
                             <span>{formatTime(state.duration)}</span>
                           </div>
                         </div>
 
-                        {/* Control Buttons */}
-                        <div className="flex items-center justify-center gap-6">
+                        {/* Controls */}
+                        <div className="flex items-center justify-center gap-6 mb-6">
                           <button
-                            onClick={handleSkipPrevious}
-                            className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                            onClick={() => previous()}
+                            className="text-gray-400 hover:text-white transition-colors p-2"
                           >
                             <SkipBack className="w-6 h-6" />
                           </button>
                           <button
-                            onClick={handlePlayPause}
-                            className="p-4 rounded-full bg-primary hover:bg-primary/80 text-black transition-colors"
+                            onClick={() => handlePlayPause()}
+                            className="w-16 h-16 bg-green-500 text-black rounded-full flex items-center justify-center hover:bg-green-600 transition-colors shadow-lg"
                           >
-                            {state.isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 fill-current" />}
+                            {state.isPlaying ? (
+                              <Pause className="w-8 h-8" />
+                            ) : (
+                              <Play className="w-8 h-8 fill-current ml-1" />
+                            )}
                           </button>
                           <button
-                            onClick={handleSkipNext}
-                            className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                            onClick={() => next()}
+                            className="text-gray-400 hover:text-white transition-colors p-2"
                           >
                             <SkipForward className="w-6 h-6" />
                           </button>
@@ -370,13 +428,23 @@ const MusicPlayerContent: React.FC = () => {
                           <input
                             type="range"
                             min="0"
-                            max="100"
-                            value={state.volume * 100}
-                            onChange={handleVolumeChange}
+                            max="1"
+                            step="0.01"
+                            value={state.volume}
+                            onChange={(e) => setVolume(parseFloat(e.target.value))}
                             className="flex-1 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                           />
-                          <span className="text-gray-400 text-sm w-8">{Math.round(state.volume * 100)}%</span>
+                          <span className="text-gray-400 text-sm w-10">
+                            {Math.round(state.volume * 100)}%
+                          </span>
                         </div>
+
+                        {/* Device Info */}
+                        {state.deviceId && (
+                          <div className="mt-4 text-xs text-gray-500 text-center">
+                            Playing on: Untamed Fitness Web Player
+                          </div>
+                        )}
                       </>
                     ) : (
                       // Fallback to Embed Player

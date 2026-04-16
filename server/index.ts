@@ -2,6 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { createServer as createHttpsServer } from "https";
+import { readFileSync } from "fs";
+import { join } from "path";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -26,6 +29,31 @@ console.log('openrouterClient:', process.env.OPENROUTER_API_KEY ? '✅' : '❌')
 
 const app = express();
 const httpServer = createServer(app);
+
+// HTTPS Server Configuration
+let httpsServer: ReturnType<typeof createHttpsServer> | null = null;
+
+try {
+  const certPath = join(__dirname, '../certs/cert.pem');
+  const keyPath = join(__dirname, '../certs/key.pem');
+  
+  // Check if certificate files exist
+  const fs = require('fs');
+  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+    const httpsOptions = {
+      key: readFileSync(keyPath),
+      cert: readFileSync(certPath)
+    };
+    
+    httpsServer = createHttpsServer(httpsOptions, app);
+    console.log('HTTPS server configured with SSL certificates');
+  } else {
+    console.log('SSL certificates not found, HTTPS server not available');
+  }
+} catch (error) {
+  console.error('Error configuring HTTPS server:', error);
+  console.log('Continuing with HTTP server only');
+}
 
 declare module "http" {
   interface IncomingMessage {
@@ -119,7 +147,29 @@ app.use((req, res, next) => {
         host: "127.0.0.1",
       },
       () => {
-        log(`serving on port ${portToTry}`);
+        log(`HTTP serving on port ${portToTry}`);
+        
+        // Start HTTPS server if available
+        if (httpsServer) {
+          httpsServer.listen(
+            {
+              port: portToTry,
+              host: "127.0.0.1",
+            },
+            () => {
+              log(`HTTPS serving on port ${portToTry}`);
+              console.log('\n\u26a1\ufe0f HTTPS server is available at: https://localhost:' + portToTry);
+              console.log('Spotify Web Playback SDK requires HTTPS for full functionality');
+              console.log('Use HTTPS for Spotify SDK features, HTTP for development fallback\n');
+            }
+          ).on('error', (err: any) => {
+            console.error('HTTPS server error:', err.message);
+            console.log('HTTPS server not available, continuing with HTTP only');
+          });
+        } else {
+          console.log('\n\u26a0\ufe0f Spotify Web Playback SDK requires HTTPS. Please use https://localhost:' + portToTry);
+          console.log('SSL certificates not found - HTTPS server not available\n');
+        }
         
         // Kevin Gilliam startup message
         console.log('[express] I AM WHAT I AM');
