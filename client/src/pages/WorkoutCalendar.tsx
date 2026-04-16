@@ -6,7 +6,8 @@ import { formatDuration } from "@/utils/workoutLogger";
 import { useUserWorkoutSessions, useDeleteUserWorkoutSession, useUpdateUserWorkoutSession } from "@/hooks/use-user-workout-sessions";
 import { WorkoutModal } from "@/components/WorkoutModal";
 import { AIWorkoutGenerator } from "@/components/AIWorkoutGenerator";
-import { Calendar, Dumbbell, Activity, Zap, Clock, Plus, Edit, Trash2, Check, Sparkles } from "lucide-react";
+import { AIVoiceTrainer } from "@/components/AIVoiceTrainer";
+import { Calendar, Dumbbell, Activity, Zap, Clock, Plus, Edit, Trash2, Check, Sparkles, Mic } from "lucide-react";
 
 interface WorkoutsByDate {
   [date: string]: Array<{
@@ -446,8 +447,8 @@ export default function WorkoutCalendar() {
                       );
                     })}
                     
-                    {/* Add Workout Button */}
-                    <div className="pt-4 border-t border-white/10">
+                    {/* Action Buttons */}
+                    <div className="pt-4 border-t border-white/10 space-y-3">
                       <Button
                         onClick={() => {
                           setEditingSession(null);
@@ -457,6 +458,14 @@ export default function WorkoutCalendar() {
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Another Workout
+                      </Button>
+                      
+                      <Button
+                        onClick={() => setIsAIModalOpen(true)}
+                        className="w-full bg-gradient-to-r from-purple-600 to-primary text-white hover:from-purple-700 hover:to-primary/600 border border-purple-500/30 rounded-xl font-bold uppercase tracking-widest text-sm"
+                      >
+                        <Mic className="w-4 h-4 mr-2" />
+                        AI Voice Trainer
                       </Button>
                     </div>
                   </div>
@@ -487,6 +496,15 @@ export default function WorkoutCalendar() {
         }}
         selectedDate={selectedDate}
         editingSession={editingSession}
+      />
+
+      {/* AI Voice Trainer Modal */}
+      <AIVoiceTrainer
+        isOpen={isAIModalOpen}
+        onClose={() => {
+          setIsAIModalOpen(false);
+          setGeneratedPlan(null);
+        }}
       />
 
       {/* Delete Confirmation Dialog */}

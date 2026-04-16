@@ -1,11 +1,17 @@
+import { fileURLToPath } from "url";
+import path from "path";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { createServer as createHttpsServer } from "https";
 import { readFileSync } from "fs";
+import fs from "fs";
 import { join } from "path";
 import dotenv from "dotenv";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -34,11 +40,10 @@ const httpServer = createServer(app);
 let httpsServer: ReturnType<typeof createHttpsServer> | null = null;
 
 try {
-  const certPath = join(__dirname, '../certs/cert.pem');
-  const keyPath = join(__dirname, '../certs/key.pem');
+  const certPath = path.join(__dirname, "certs", "cert.pem");
+  const keyPath = path.join(__dirname, "certs", "key.pem");
   
   // Check if certificate files exist
-  const fs = require('fs');
   if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
     const httpsOptions = {
       key: readFileSync(keyPath),
@@ -147,11 +152,12 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Kevin Gilliam Port Logic - Primary: 9688, Fallback: 90688
+  // Kevin Gilliam Port Logic - Primary: 9688, Dynamic Fallback
   // this serves both the API and the client.
   const primaryPort = 9688;
-  const fallbackPort = 90688;
   const port = parseInt(process.env.PORT || primaryPort.toString(), 10);
+  const fallbackPort = port + 1;
+  const finalFallbackPort = fallbackPort > 65535 ? 3001 : fallbackPort;
 
   // Try primary port first, then fallback
   const tryStartServer = (portToTry: number, isFallback: boolean = false) => {
@@ -201,10 +207,10 @@ app.use((req, res, next) => {
         console.log('[express] - Derrick Gilliam Sr. (\ud83c\udfa4\ud83c\udfc0\ud83e\ude96\ud83d\udcaa\ud83c\udffe)');
         console.log('[express]');
         console.log('[express] Primary Port: 9688');
-        console.log('[express] Fallback Port: 90688');
+        console.log('[express] Fallback Port:', finalFallbackPort);
         console.log('[express]');
         if (isFallback) {
-          console.log('[express] Server running Untamed Fit by Kevin Gilliam on Fallback Port 90688 \ud83d\ude80\ud83c\udfc3\ud83c\udffe\u200d\u2642\ufe0f');
+          console.log(`[express] Server running Untamed Fit by Kevin Gilliam on Fallback Port ${finalFallbackPort} \ud83d\ude80\ud83c\udfc3\ud83c\udffe\u200d\u2642\ufe0f`);
         } else {
           console.log('[express] Server running Untamed Fit by Kevin Gilliam on Port 9688 \ud83d\ude80\ud83c\udfc3\ud83c\udffe\u200d\u2642\ufe0f');
         }
@@ -213,8 +219,8 @@ app.use((req, res, next) => {
     
     httpServer.on('error', (err: any) => {
       if (err.code === 'EADDRINUSE' && !isFallback) {
-        console.log(`[express] Port ${portToTry} in use, trying fallback port ${fallbackPort}...`);
-        tryStartServer(fallbackPort, true);
+        console.log(`[express] Port ${portToTry} in use, trying fallback port ${finalFallbackPort}...`);
+        tryStartServer(finalFallbackPort, true);
       } else {
         console.error('[express] Server failed to start:', err);
         process.exit(1);

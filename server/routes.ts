@@ -8,6 +8,7 @@ import { registerAudioRoutes } from "./replit_integrations/audio";
 import { registerKevinRoutes } from "./api/kevin";
 import { registerKevinFreeRoutes } from "./api/kevin-free";
 import spotifyRoutes from "./spotify";
+import { handleWorkoutAgentRequest, resetConversationState } from "./ai-workout-agent";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -347,6 +348,25 @@ export async function registerRoutes(
   
   // Register Spotify routes
   app.use('/api/spotify', spotifyRoutes);
+
+  // AI Workout Agent Route
+  app.post('/api/ai/workout-agent', handleWorkoutAgentRequest);
+
+  // Reset conversation state route
+  app.post('/api/ai/reset-conversation', (req, res) => {
+    try {
+      const { userId } = req.body;
+      if (!userId) {
+        return res.status(400).json({ message: "userId is required!" });
+      }
+      
+      resetConversationState(userId);
+      res.json({ message: "Conversation state reset successfully!" });
+    } catch (error) {
+      console.error("Error resetting conversation state:", error);
+      res.status(500).json({ message: "Failed to reset conversation state" });
+    }
+  });
 
   // Seed DB with some mocked content
   seedDatabase().catch(console.error);
