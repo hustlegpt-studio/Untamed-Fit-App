@@ -1,4 +1,7 @@
 // Simple in-memory storage without SQLite dependencies
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
 
 export const users = sqliteTable("users", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -52,6 +55,36 @@ export const messages = sqliteTable("messages", {
   role: text("role").notNull(),
   content: text("content").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).default(Date.now).notNull(),
+});
+
+export const userWorkoutSessions = sqliteTable("user_workout_sessions", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  userId: integer("user_id", { mode: "number" }).notNull(),
+  workoutName: text("workout_name").notNull(),
+  bodyPart: text("body_part").notNull(),
+  reps: integer("reps", { mode: "number" }).notNull(),
+  sets: integer("sets", { mode: "number" }).notNull(),
+  duration: integer("duration", { mode: "number" }).notNull(),
+  date: text("date").notNull(), // YYYY-MM-DD
+  time: text("time").notNull(), // HH:MM
+  userWeight: integer("user_weight", { mode: "number" }).default(0).notNull(),
+  calories: integer("calories", { mode: "number" }).default(0).notNull(),
+  isCompleted: integer("is_completed", { mode: "boolean" }).default(false).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(Date.now).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(Date.now).notNull(),
+});
+
+export const bookingSessions = sqliteTable("booking_sessions", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  traineeEmail: text("trainee_email").notNull(),
+  date: text("date").notNull(), // YYYY-MM-DD
+  time: text("time").notNull(), // HH:MM format (e.g., "6:00 AM")
+  duration: text("duration").notNull(), // "30 min", "45 min", "60 min", "90 min"
+  type: text("type").notNull(), // Training type
+  notes: text("notes"), // Optional notes
+  status: text("status", { enum: ["booked", "cancelled", "completed"] }).default("booked").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(Date.now).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(Date.now).notNull(),
 });
 
 // In-memory storage for now

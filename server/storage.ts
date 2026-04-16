@@ -1,5 +1,5 @@
 import { memoryStorage } from "./memory-storage";
-import type { InsertUser, User, InsertWorkout, Workout, InsertProgressLog, ProgressLog, Challenge, Conversation, Message } from "../shared/schema";
+import type { InsertUser, User, InsertWorkout, Workout, InsertProgressLog, ProgressLog, Challenge, Conversation, Message, InsertUserWorkoutSession, UserWorkoutSession, InsertBookingSession, BookingSession } from "../shared/schema";
 
 export interface IStorage {
   // Users
@@ -23,6 +23,13 @@ export interface IStorage {
   // Progress
   getProgressLogs(userId: number): Promise<ProgressLog[]>;
   createProgressLog(log: InsertProgressLog): Promise<ProgressLog>;
+
+  // User Workout Sessions
+  getUserWorkoutSessions(userId: number): Promise<UserWorkoutSession[]>;
+  getUserWorkoutSessionsByDate(userId: number, date: string): Promise<UserWorkoutSession[]>;
+  createUserWorkoutSession(session: InsertUserWorkoutSession): Promise<UserWorkoutSession>;
+  updateUserWorkoutSession(id: number, updates: Partial<UserWorkoutSession>): Promise<UserWorkoutSession | undefined>;
+  deleteUserWorkoutSession(id: number): Promise<boolean>;
 
   // Challenges
   getChallenges(): Promise<Challenge[]>;
@@ -94,6 +101,56 @@ export class DatabaseStorage implements IStorage {
 
   async createProgressLog(log: InsertProgressLog): Promise<ProgressLog> {
     return memoryStorage.createProgressLog(log);
+  }
+
+  // User Workout Sessions
+  async getUserWorkoutSessions(userId: number): Promise<UserWorkoutSession[]> {
+    return memoryStorage.getUserWorkoutSessions(userId);
+  }
+
+  async getUserWorkoutSessionsByDate(userId: number, date: string): Promise<UserWorkoutSession[]> {
+    return memoryStorage.getUserWorkoutSessionsByDate(userId, date);
+  }
+
+  async createUserWorkoutSession(session: InsertUserWorkoutSession): Promise<UserWorkoutSession> {
+    return memoryStorage.createUserWorkoutSession(session);
+  }
+
+  async updateUserWorkoutSession(id: number, updates: Partial<UserWorkoutSession>): Promise<UserWorkoutSession | undefined> {
+    return memoryStorage.updateUserWorkoutSession(id, updates);
+  }
+
+  async deleteUserWorkoutSession(id: number): Promise<boolean> {
+    return memoryStorage.deleteUserWorkoutSession(id);
+  }
+
+  // Booking Sessions
+  async getBookingSessions(): Promise<BookingSession[]> {
+    return memoryStorage.getBookingSessions();
+  }
+
+  async getBookingSessionsByDate(date: string): Promise<BookingSession[]> {
+    return memoryStorage.getBookingSessionsByDate(date);
+  }
+
+  async getBookingSessionsByTrainee(traineeEmail: string): Promise<BookingSession[]> {
+    return memoryStorage.getBookingSessionsByTrainee(traineeEmail);
+  }
+
+  async getBookingSessionsByDateAndTime(date: string, time: string): Promise<BookingSession[]> {
+    return memoryStorage.getBookingSessionsByDateAndTime(date, time);
+  }
+
+  async createBookingSession(session: InsertBookingSession): Promise<BookingSession> {
+    return memoryStorage.createBookingSession(session);
+  }
+
+  async updateBookingSession(id: number, updates: Partial<BookingSession>): Promise<BookingSession | undefined> {
+    return memoryStorage.updateBookingSession(id, updates);
+  }
+
+  async deleteBookingSession(id: number): Promise<boolean> {
+    return memoryStorage.deleteBookingSession(id);
   }
 
   // Challenges

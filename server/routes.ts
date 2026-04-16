@@ -178,6 +178,129 @@ export async function registerRoutes(
     }
   });
 
+  // User Workout Sessions
+  app.get(api.userWorkoutSessions.list.path, async (req, res) => {
+    try {
+      const { userId, date } = api.userWorkoutSessions.list.input.parse(req.query);
+      const sessions = date
+        ? await storage.getUserWorkoutSessionsByDate(Number(userId), date)
+        : await storage.getUserWorkoutSessions(Number(userId));
+      res.json(sessions);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.post(api.userWorkoutSessions.create.path, async (req, res) => {
+    try {
+      const input = api.userWorkoutSessions.create.input.parse(req.body);
+      const session = await storage.createUserWorkoutSession(input);
+      res.status(201).json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.put(api.userWorkoutSessions.update.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const updates = api.userWorkoutSessions.update.input.parse(req.body);
+      const session = await storage.updateUserWorkoutSession(id, updates);
+      if (!session) {
+        return res.status(404).json({ message: "Workout session not found" });
+      }
+      res.json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.userWorkoutSessions.delete.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const success = await storage.deleteUserWorkoutSession(id);
+      if (!success) {
+        return res.status(404).json({ message: "Workout session not found" });
+      }
+      res.json({ success: true });
+    } catch (err) {
+      throw err;
+    }
+  });
+
+  // Booking Sessions
+  app.get(api.bookingSessions.list.path, async (req, res) => {
+    try {
+      const { date, traineeEmail } = api.bookingSessions.list.input.parse(req.query);
+      let sessions;
+      if (date) {
+        sessions = await storage.getBookingSessionsByDate(date);
+      } else if (traineeEmail) {
+        sessions = await storage.getBookingSessionsByTrainee(traineeEmail);
+      } else {
+        sessions = await storage.getBookingSessions();
+      }
+      res.json(sessions);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.post(api.bookingSessions.create.path, async (req, res) => {
+    try {
+      const input = api.bookingSessions.create.input.parse(req.body);
+      const session = await storage.createBookingSession(input);
+      res.status(201).json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.put(api.bookingSessions.update.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const updates = api.bookingSessions.update.input.parse(req.body);
+      const session = await storage.updateBookingSession(id, updates);
+      if (!session) {
+        return res.status(404).json({ message: "Booking session not found" });
+      }
+      res.json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.bookingSessions.delete.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const success = await storage.deleteBookingSession(id);
+      if (!success) {
+        return res.status(404).json({ message: "Booking session not found" });
+      }
+      res.json({ success: true });
+    } catch (err) {
+      throw err;
+    }
+  });
+
   app.get(api.progress.list.path, async (req, res) => {
     // Mock user 1
     const logs = await storage.getProgressLogs(1);
