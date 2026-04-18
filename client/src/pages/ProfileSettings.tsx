@@ -55,7 +55,7 @@ export default function ProfileSettings() {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      setLocation("/auth");
+      setLocation("/login");
       return;
     }
 

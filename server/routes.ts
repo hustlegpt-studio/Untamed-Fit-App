@@ -7,6 +7,8 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerAudioRoutes } from "./replit_integrations/audio";
 import { registerKevinRoutes } from "./api/kevin";
 import { registerKevinFreeRoutes } from "./api/kevin-free";
+import spotifyRoutes from "./spotify";
+import { handleWorkoutAgentRequest, resetConversationState } from "./ai-workout-agent";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -43,22 +45,112 @@ export async function registerRoutes(
   });
 
   app.get(api.auth.me.path, async (req, res) => {
-    // For now, return the admin user with all profile fields
+    // Get the active user from the request (simplified for now)
     // In a real app, this would use session/JWT to get the logged-in user
-    const user = await storage.getUserByUsername("admin");
-    if (!user) {
-      return res.status(401).json({ message: "Not authenticated" });
+    const activeUserEmail = req.headers['x-user-email'] as string;
+    
+    if (!activeUserEmail) {
+      // Fallback to admin user for development
+      const user = await storage.getUserByUsername("admin");
+      if (!user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Ensure owner/VIP status is set correctly
+      const userWithEmail = {
+        ...user,
+        email: user.email || "untamedfitapp@gmail.com", // Default to owner email for admin
+        isOwner: user.email === "untamedfitapp@gmail.com" || user.isOwner,
+        isVIP: user.email === "untamedfitapp@gmail.com" || user.isVIP
+      };
+      
+      res.json(userWithEmail);
+      return;
     }
     
-    // Ensure owner/VIP status is set correctly
-    const userWithEmail = {
-      ...user,
-      email: user.email || "untamedfitapp@gmail.com", // Default to owner email for admin
-      isOwner: user.email === "untamedfitapp@gmail.com" || user.isOwner,
-      isVIP: user.email === "untamedfitapp@gmail.com" || user.isVIP
-    };
+    // Try to find user by email
+    let user = await storage.getUserByEmail(activeUserEmail);
     
-    res.json(userWithEmail);
+    // If user doesn't exist in server storage, create them from client data
+    if (!user) {
+      // This is a simplified sync - in production, you'd want proper session management
+      const defaultUser = {
+        username: activeUserEmail.split('@')[0], // Use email prefix as username
+        email: activeUserEmail,
+        password: "stored-on-client", // Password is handled client-side
+        subscriptionTier: "free",
+        blindMode: false,
+        voiceCues: true,
+        theme: "dark"
+      };
+      
+      user = await storage.createUser(defaultUser);
+    }
+    
+    // Check if user is VIP from server storage
+    const isVipUser = await storage.isVipUser(user.email || "");
+    
+    res.json({
+      ...user,
+      isVIP: user.isVIP || isVipUser
+    });
+  });
+
+  // VIP User Management API Routes
+  app.get('/api/vip-users', async (req, res) => {
+    try {
+      const activeUserEmail = req.headers['x-user-email'] as string;
+      
+      // Only allow owner to access VIP users list
+      if (activeUserEmail !== "untamedfitapp@gmail.com") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const vipUsers = await storage.getVipUsers();
+      res.json(vipUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get VIP users" });
+    }
+  });
+
+  app.post('/api/vip-users', async (req, res) => {
+    try {
+      const activeUserEmail = req.headers['x-user-email'] as string;
+      
+      // Only allow owner to add VIP users
+      if (activeUserEmail !== "untamedfitapp@gmail.com") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      await storage.addVipUser(email);
+      const vipUsers = await storage.getVipUsers();
+      res.json(vipUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add VIP user" });
+    }
+  });
+
+  app.delete('/api/vip-users/:email', async (req, res) => {
+    try {
+      const activeUserEmail = req.headers['x-user-email'] as string;
+      
+      // Only allow owner to remove VIP users
+      if (activeUserEmail !== "untamedfitapp@gmail.com") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { email } = req.params;
+      await storage.removeVipUser(email);
+      const vipUsers = await storage.getVipUsers();
+      res.json(vipUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove VIP user" });
+    }
   });
 
   app.get(api.workouts.list.path, async (req, res) => {
@@ -83,6 +175,129 @@ export async function registerRoutes(
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });
       }
+      throw err;
+    }
+  });
+
+  // User Workout Sessions
+  app.get(api.userWorkoutSessions.list.path, async (req, res) => {
+    try {
+      const { userId, date } = api.userWorkoutSessions.list.input.parse(req.query);
+      const sessions = date
+        ? await storage.getUserWorkoutSessionsByDate(Number(userId), date)
+        : await storage.getUserWorkoutSessions(Number(userId));
+      res.json(sessions);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.post(api.userWorkoutSessions.create.path, async (req, res) => {
+    try {
+      const input = api.userWorkoutSessions.create.input.parse(req.body);
+      const session = await storage.createUserWorkoutSession(input);
+      res.status(201).json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.put(api.userWorkoutSessions.update.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const updates = api.userWorkoutSessions.update.input.parse(req.body);
+      const session = await storage.updateUserWorkoutSession(id, updates);
+      if (!session) {
+        return res.status(404).json({ message: "Workout session not found" });
+      }
+      res.json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.userWorkoutSessions.delete.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const success = await storage.deleteUserWorkoutSession(id);
+      if (!success) {
+        return res.status(404).json({ message: "Workout session not found" });
+      }
+      res.json({ success: true });
+    } catch (err) {
+      throw err;
+    }
+  });
+
+  // Booking Sessions
+  app.get(api.bookingSessions.list.path, async (req, res) => {
+    try {
+      const { date, traineeEmail } = api.bookingSessions.list.input.parse(req.query);
+      let sessions;
+      if (date) {
+        sessions = await storage.getBookingSessionsByDate(date);
+      } else if (traineeEmail) {
+        sessions = await storage.getBookingSessionsByTrainee(traineeEmail);
+      } else {
+        sessions = await storage.getBookingSessions();
+      }
+      res.json(sessions);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.post(api.bookingSessions.create.path, async (req, res) => {
+    try {
+      const input = api.bookingSessions.create.input.parse(req.body);
+      const session = await storage.createBookingSession(input);
+      res.status(201).json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.put(api.bookingSessions.update.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const updates = api.bookingSessions.update.input.parse(req.body);
+      const session = await storage.updateBookingSession(id, updates);
+      if (!session) {
+        return res.status(404).json({ message: "Booking session not found" });
+      }
+      res.json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.bookingSessions.delete.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const success = await storage.deleteBookingSession(id);
+      if (!success) {
+        return res.status(404).json({ message: "Booking session not found" });
+      }
+      res.json({ success: true });
+    } catch (err) {
       throw err;
     }
   });
@@ -130,6 +345,28 @@ export async function registerRoutes(
   registerAudioRoutes(app);
   registerKevinRoutes(app);
   registerKevinFreeRoutes(app);
+  
+  // Register Spotify routes
+  app.use('/api/spotify', spotifyRoutes);
+
+  // AI Workout Agent Route
+  app.post('/api/ai/workout-agent', handleWorkoutAgentRequest);
+
+  // Reset conversation state route
+  app.post('/api/ai/reset-conversation', (req, res) => {
+    try {
+      const { userId } = req.body;
+      if (!userId) {
+        return res.status(400).json({ message: "userId is required!" });
+      }
+      
+      resetConversationState(userId);
+      res.json({ message: "Conversation state reset successfully!" });
+    } catch (error) {
+      console.error("Error resetting conversation state:", error);
+      res.status(500).json({ message: "Failed to reset conversation state" });
+    }
+  });
 
   // Seed DB with some mocked content
   seedDatabase().catch(console.error);

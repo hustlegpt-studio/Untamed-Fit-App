@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertUserSchema, insertWorkoutSchema, insertProgressLogSchema, insertChallengeSchema, users, workouts, progressLogs, challenges } from "./schema";
+import { insertUserSchema, insertWorkoutSchema, insertProgressLogSchema, insertChallengeSchema, insertUserWorkoutSessionSchema, insertBookingSessionSchema, users, workouts, progressLogs, challenges } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -88,6 +88,98 @@ export const api = {
       responses: {
         201: z.custom<typeof progressLogs.$inferSelect>(),
         400: errorSchemas.validation,
+      }
+    }
+  },
+  userWorkoutSessions: {
+    list: {
+      method: "GET" as const,
+      path: "/api/user-workout-sessions" as const,
+      input: z.object({
+        userId: z.number(),
+        date: z.string().optional(),
+      }),
+      responses: {
+        200: z.array(z.custom<any>()),
+      }
+    },
+    create: {
+      method: "POST" as const,
+      path: "/api/user-workout-sessions" as const,
+      input: insertUserWorkoutSessionSchema,
+      responses: {
+        201: z.custom<any>(),
+        400: errorSchemas.validation,
+      }
+    },
+    update: {
+      method: "PUT" as const,
+      path: "/api/user-workout-sessions/:id" as const,
+      input: z.object({
+        isCompleted: z.boolean().optional(),
+        reps: z.number().optional(),
+        sets: z.number().optional(),
+        duration: z.number().optional(),
+      }),
+      responses: {
+        200: z.custom<any>(),
+        404: errorSchemas.notFound,
+        400: errorSchemas.validation,
+      }
+    },
+    delete: {
+      method: "DELETE" as const,
+      path: "/api/user-workout-sessions/:id" as const,
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        404: errorSchemas.notFound,
+      }
+    }
+  },
+  bookingSessions: {
+    list: {
+      method: "GET" as const,
+      path: "/api/booking-sessions" as const,
+      input: z.object({
+        date: z.string().optional(),
+        traineeEmail: z.string().optional(),
+      }),
+      responses: {
+        200: z.array(z.custom<any>()),
+      }
+    },
+    create: {
+      method: "POST" as const,
+      path: "/api/booking-sessions" as const,
+      input: insertBookingSessionSchema,
+      responses: {
+        201: z.custom<any>(),
+        400: errorSchemas.validation,
+      }
+    },
+    update: {
+      method: "PUT" as const,
+      path: "/api/booking-sessions/:id" as const,
+      input: z.object({
+        status: z.enum(["booked", "cancelled", "completed"]).optional(),
+        notes: z.string().optional(),
+        date: z.string().optional(),
+        time: z.string().optional(),
+        duration: z.string().optional(),
+        type: z.string().optional(),
+      }),
+      responses: {
+        200: z.custom<any>(),
+        404: errorSchemas.notFound,
+        400: errorSchemas.validation,
+      }
+    },
+    delete: {
+      method: "DELETE" as const,
+      path: "/api/booking-sessions/:id" as const,
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        404: errorSchemas.notFound,
       }
     }
   },

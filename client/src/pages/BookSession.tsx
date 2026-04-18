@@ -14,17 +14,17 @@ import {
 import { cn } from "@/lib/utils";
 import { getActiveUser } from "@/utils/auth";
 import {
-  getSessions,
-  saveSession,
-  cancelSession,
-  getBookedTimesForDate,
-  getSessionsForTrainee,
-  isDateFullyBooked,
-  canCancelSession,
+  useBookingSessions,
+  useBookingSessionsByDate,
+  useBookingSessionsByTrainee,
+  useCreateBookingSession,
+  useUpdateBookingSession,
+} from "@/hooks/use-booking-sessions";
+import {
   AVAILABLE_TIMES,
   TRAINING_TYPES,
   DURATIONS,
-  Session,
+  canCancelSession,
 } from "@/utils/schedule";
 import { addNotification } from "@/utils/notifications";
 import {
@@ -67,21 +67,15 @@ export default function BookSession() {
   const [selectedDuration, setSelectedDuration] = useState("");
   const [notes, setNotes] = useState("");
   const [step, setStep] = useState<"calendar" | "form" | "success">("calendar");
-  const [mySessions, setMySessions] = useState<Session[]>([]);
   const [cancelMsg, setCancelMsg] = useState<string | null>(null);
-  const [sessions, setSessions] = useState<Session[]>([]);
 
   const email = getActiveUser() || "guest@untamed.fit";
-
-  useEffect(() => {
-    setSessions(getSessions());
-    setMySessions(getSessionsForTrainee(email));
-  }, [email]);
-
-  const refreshSessions = () => {
-    setSessions(getSessions());
-    setMySessions(getSessionsForTrainee(email));
-  };
+  
+  // React Query hooks
+  const { data: sessions = [] } = useBookingSessions();
+  const { data: mySessions = [] } = useBookingSessionsByTrainee(email);
+  const createMutation = useCreateBookingSession();
+  const updateMutation = useUpdateBookingSession();
 
   const calendarCells = buildCalendarDays(viewYear, viewMonth);
 
@@ -101,9 +95,15 @@ export default function BookSession() {
     return d < t;
   };
 
+  const isDateFullyBooked = (date: string) => {
+    const dateSessions = sessions.filter((s: any) => s.date === date && s.status !== "cancelled");
+    return dateSessions.length >= 8;
+  };
+
   const selectedDate = selectedDay ? formatDate(viewYear, viewMonth, selectedDay) : "";
-  const bookedTimes = selectedDate ? getBookedTimesForDate(selectedDate) : [];
-  const availableTimes = AVAILABLE_TIMES.filter((t) => !bookedTimes.includes(t));
+  const { data: selectedDateSessions = [] } = useBookingSessionsByDate(selectedDate);
+  const bookedTimes = selectedDate ? selectedDateSessions.filter((s: any) => s.status !== "cancelled").map((s: any) => s.time) : [];
+  const availableTimes = AVAILABLE_TIMES.filter((t: string) => !bookedTimes.includes(t));
 
   const handleDayClick = (day: number) => {
     if (isPastDay(day)) return;
@@ -115,42 +115,45 @@ export default function BookSession() {
   const handleBook = () => {
     if (!selectedDate || !selectedTime || !selectedType || !selectedDuration) return;
 
-    const session: Session = {
-      id: crypto.randomUUID(),
-      trainee: email,
+    const sessionData = {
+      traineeEmail: email,
       date: selectedDate,
       time: selectedTime,
       duration: selectedDuration,
       type: selectedType,
       notes,
-      status: "booked",
-      createdAt: new Date().toISOString(),
     };
 
-    saveSession(session);
-    addNotification({
-      type: "booking",
-      message: `${email} booked a ${selectedType} session on ${selectedDate} at ${selectedTime}.`,
-      read: false,
+    createMutation.mutate(sessionData, {
+      onSuccess: () => {
+        addNotification({
+          type: "booking",
+          message: `${email} booked a ${selectedType} session on ${selectedDate} at ${selectedTime}.`,
+          read: false,
+        });
+        setStep("success");
+      },
     });
-
-    refreshSessions();
-    setStep("success");
   };
 
-  const handleCancel = (session: Session) => {
+  const handleCancel = (session: any) => {
     if (!canCancelSession(session.date)) {
       setCancelMsg("Sessions can only be canceled with 2 days' notice.");
       setTimeout(() => setCancelMsg(null), 4000);
       return;
     }
-    cancelSession(session.id);
-    addNotification({
-      type: "cancellation",
-      message: `${email} cancelled their ${session.type} session on ${session.date} at ${session.time}.`,
-      read: false,
+    updateMutation.mutate({
+      id: session.id,
+      updates: { status: "cancelled" }
+    }, {
+      onSuccess: () => {
+        addNotification({
+          type: "cancellation",
+          message: `${email} cancelled their ${session.type} session on ${session.date} at ${session.time}.`,
+          read: false,
+        });
+      },
     });
-    refreshSessions();
   };
 
   const resetForm = () => {
@@ -212,12 +215,12 @@ export default function BookSession() {
 
             {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1">
-              {calendarCells.map((day, i) => {
+              {calendarCells.map((day: any, i: number) => {
                 if (!day) return <div key={`empty-${i}`} />;
                 const date = formatDate(viewYear, viewMonth, day);
                 const past = isPastDay(day);
                 const fullyBooked = isDateFullyBooked(date);
-                const hasBooking = mySessions.some((s) => s.date === date);
+                const hasBooking = mySessions.some((s: any) => s.date === date && s.status !== "cancelled");
                 const isSelected = selectedDay === day;
                 const hasSlots = !past && !fullyBooked;
 
@@ -290,7 +293,7 @@ export default function BookSession() {
                 ) : (
                   <>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mb-6">
-                      {availableTimes.map((time) => (
+                      {availableTimes.map((time: string) => (
                         <motion.button
                           key={time}
                           whileHover={{ scale: 1.05 }}
@@ -353,7 +356,7 @@ export default function BookSession() {
                         <SelectValue placeholder="Select training type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {TRAINING_TYPES.map((t) => (
+                        {TRAINING_TYPES.map((t: string) => (
                           <SelectItem key={t} value={t}>{t}</SelectItem>
                         ))}
                       </SelectContent>
@@ -369,7 +372,7 @@ export default function BookSession() {
                         <SelectValue placeholder="Select duration" />
                       </SelectTrigger>
                       <SelectContent>
-                        {DURATIONS.map((d) => (
+                        {DURATIONS.map((d: string) => (
                           <SelectItem key={d} value={d}>{d}</SelectItem>
                         ))}
                       </SelectContent>
@@ -472,8 +475,9 @@ export default function BookSession() {
             ) : (
               <div className="space-y-3">
                 {[...mySessions]
-                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                  .map((session) => {
+                  .filter((session: any) => session.status !== "cancelled")
+                  .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .map((session: any) => {
                     const canCancel = canCancelSession(session.date);
                     return (
                       <motion.div
@@ -491,7 +495,7 @@ export default function BookSession() {
                             <p className="text-silver/60 text-xs">{session.duration}</p>
                           </div>
                           <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-primary/20 text-primary flex-shrink-0">
-                            Booked
+                            {session.status === "booked" ? "Booked" : session.status}
                           </span>
                         </div>
                         {session.notes && (

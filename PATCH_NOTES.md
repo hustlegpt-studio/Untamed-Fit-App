@@ -1,5 +1,34 @@
 # Untamed Fit - Patch Notes
 
+## Version 2.0.1 - Server Port & Demo Message Update
+**Date:** April 14, 2026  
+**Type:** Minor Update  
+**Breaking Changes:** None
+
+### **Server Port Configuration Update**
+- **Primary Port Changed:** Updated from port 3000 to port 9688
+- **Fallback Port Added:** Added port 90688 as automatic fallback
+- **Kevin Gilliam Demo Messages:** Added custom startup and shutdown messages
+- **Port Logic Enhancement:** Automatic fallback if primary port is in use
+
+### **Demo Message Features**
+- **Startup Message:** Custom Kevin Gilliam branding with motivational quotes
+- **Shutdown Message:** Coach KG signature "And That's Bottom Line!!!!"
+- **Port Display:** Shows actual running port (primary or fallback)
+- **Emojis Preserved:** All original emojis maintained exactly as specified
+
+### **Files Modified (v2.0.1)**
+```
+server/index.ts - Updated port logic and added demo messages
+.env - Changed PORT from 3000 to 9688
+```
+
+### **Changes Made (v2.0.1)**
+- **server/index.ts:** Added Kevin Gilliam startup/shutdown messages, implemented port fallback logic
+- **.env:** Updated PORT environment variable to match server configuration
+
+---
+
 ## Version 2.0.0 - Complete AI System & User Management Overhaul
 **Date:** March 31, 2026  
 **Type:** Major Feature Release  

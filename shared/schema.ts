@@ -68,6 +68,36 @@ export interface Message {
   createdAt: number;
 }
 
+export interface UserWorkoutSession {
+  id: number;
+  userId: number;
+  workoutName: string;
+  bodyPart: string;
+  reps: number;
+  sets: number;
+  duration: number; // seconds from stopwatch
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
+  userWeight: number;
+  calories: number;
+  isCompleted: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface BookingSession {
+  id: number;
+  traineeEmail: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM format (e.g., "6:00 AM")
+  duration: string; // "30 min", "45 min", "60 min", "90 min"
+  type: string; // Training type
+  notes?: string;
+  status: "booked" | "cancelled" | "completed";
+  createdAt: number;
+  updatedAt: number;
+}
+
 // Zod schemas
 export const insertUserSchema = z.object({
   username: z.string(),
@@ -109,6 +139,20 @@ export const insertProgressLogSchema = z.object({
   photoUrl: z.string().optional(),
 });
 
+export const insertUserWorkoutSessionSchema = z.object({
+  userId: z.number(),
+  workoutName: z.string(),
+  bodyPart: z.string(),
+  reps: z.number(),
+  sets: z.number(),
+  duration: z.number(),
+  date: z.string(),
+  time: z.string(),
+  userWeight: z.number().default(0),
+  calories: z.number().default(0),
+  isCompleted: z.boolean().default(false),
+});
+
 export const insertChallengeSchema = z.object({
   title: z.string(),
   description: z.string(),
@@ -116,7 +160,19 @@ export const insertChallengeSchema = z.object({
   reward: z.string().optional(),
 });
 
+export const insertBookingSessionSchema = z.object({
+  traineeEmail: z.string(),
+  date: z.string(),
+  time: z.string(),
+  duration: z.string(),
+  type: z.string(),
+  notes: z.string().optional(),
+  status: z.enum(["booked", "cancelled", "completed"]).default("booked"),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertWorkout = z.infer<typeof insertWorkoutSchema>;
 export type InsertProgressLog = z.infer<typeof insertProgressLogSchema>;
+export type InsertUserWorkoutSession = z.infer<typeof insertUserWorkoutSessionSchema>;
 export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type InsertBookingSession = z.infer<typeof insertBookingSessionSchema>;

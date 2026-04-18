@@ -1,6 +1,6 @@
 // Simple in-memory storage without SQLite dependencies
-import type { InsertUser, User, InsertWorkout, Workout, InsertProgressLog, ProgressLog, Challenge, Conversation, Message } from "../shared/schema";
-import { insertUserSchema, insertWorkoutSchema, insertProgressLogSchema, insertChallengeSchema } from "../shared/schema";
+import type { InsertUser, User, InsertWorkout, Workout, InsertProgressLog, ProgressLog, Challenge, Conversation, Message, InsertUserWorkoutSession, UserWorkoutSession, InsertBookingSession, BookingSession } from "../shared/schema";
+import { insertUserSchema, insertWorkoutSchema, insertProgressLogSchema, insertChallengeSchema, insertUserWorkoutSessionSchema, insertBookingSessionSchema } from "../shared/schema";
 
 // In-memory storage
 class MemoryStorage {
@@ -10,6 +10,9 @@ class MemoryStorage {
   private challenges: Challenge[] = [];
   private conversations: Conversation[] = [];
   private messages: Message[] = [];
+  private userWorkoutSessions: UserWorkoutSession[] = [];
+  private bookingSessions: BookingSession[] = [];
+  private vipUsers: string[] = ["user1@example.com", "user2@example.com"]; // Initialize with test emails
   private nextId = 1;
 
   // Users
@@ -19,6 +22,10 @@ class MemoryStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return this.users.find(u => u.username === username);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return this.users.find(u => u.email === email);
   }
 
   async createUser(user: Omit<User, 'id'>): Promise<User> {
@@ -41,6 +48,25 @@ class MemoryStorage {
       return this.users[index];
     }
     throw new Error('User not found');
+  }
+
+  // VIP User Management
+  async getVipUsers(): Promise<string[]> {
+    return [...this.vipUsers];
+  }
+
+  async addVipUser(email: string): Promise<void> {
+    if (!this.vipUsers.includes(email)) {
+      this.vipUsers.push(email);
+    }
+  }
+
+  async removeVipUser(email: string): Promise<void> {
+    this.vipUsers = this.vipUsers.filter(e => e !== email);
+  }
+
+  async isVipUser(email: string): Promise<boolean> {
+    return this.vipUsers.includes(email);
   }
 
   // Workouts
@@ -67,6 +93,98 @@ class MemoryStorage {
     const newLog = { id: this.nextId++, date: Date.now(), ...log };
     this.progressLogs.push(newLog);
     return newLog;
+  }
+
+  // User Workout Sessions
+  async getUserWorkoutSessions(userId: number): Promise<UserWorkoutSession[]> {
+    return this.userWorkoutSessions.filter(session => session.userId === userId);
+  }
+
+  async getUserWorkoutSessionsByDate(userId: number, date: string): Promise<UserWorkoutSession[]> {
+    return this.userWorkoutSessions.filter(session => 
+      session.userId === userId && session.date === date
+    );
+  }
+
+  async createUserWorkoutSession(session: Omit<UserWorkoutSession, 'id' | 'createdAt' | 'updatedAt'>): Promise<UserWorkoutSession> {
+    const now = Date.now();
+    const newSession = { 
+      id: this.nextId++, 
+      createdAt: now, 
+      updatedAt: now, 
+      ...session 
+    };
+    this.userWorkoutSessions.push(newSession);
+    return newSession;
+  }
+
+  async updateUserWorkoutSession(id: number, updates: Partial<UserWorkoutSession>): Promise<UserWorkoutSession | undefined> {
+    const index = this.userWorkoutSessions.findIndex(session => session.id === id);
+    if (index === -1) return undefined;
+    
+    this.userWorkoutSessions[index] = {
+      ...this.userWorkoutSessions[index],
+      ...updates,
+      updatedAt: Date.now()
+    };
+    return this.userWorkoutSessions[index];
+  }
+
+  async deleteUserWorkoutSession(id: number): Promise<boolean> {
+    const index = this.userWorkoutSessions.findIndex(session => session.id === id);
+    if (index === -1) return false;
+    
+    this.userWorkoutSessions.splice(index, 1);
+    return true;
+  }
+
+  // Booking Sessions
+  async getBookingSessions(): Promise<BookingSession[]> {
+    return this.bookingSessions;
+  }
+
+  async getBookingSessionsByDate(date: string): Promise<BookingSession[]> {
+    return this.bookingSessions.filter(session => session.date === date);
+  }
+
+  async getBookingSessionsByTrainee(traineeEmail: string): Promise<BookingSession[]> {
+    return this.bookingSessions.filter(session => session.traineeEmail === traineeEmail);
+  }
+
+  async getBookingSessionsByDateAndTime(date: string, time: string): Promise<BookingSession[]> {
+    return this.bookingSessions.filter(session => session.date === date && session.time === time && session.status !== "cancelled");
+  }
+
+  async createBookingSession(session: Omit<BookingSession, 'id' | 'createdAt' | 'updatedAt'>): Promise<BookingSession> {
+    const now = Date.now();
+    const newSession = {
+      id: this.nextId++,
+      createdAt: now,
+      updatedAt: now,
+      ...session
+    };
+    this.bookingSessions.push(newSession);
+    return newSession;
+  }
+
+  async updateBookingSession(id: number, updates: Partial<BookingSession>): Promise<BookingSession | undefined> {
+    const index = this.bookingSessions.findIndex(session => session.id === id);
+    if (index === -1) return undefined;
+
+    this.bookingSessions[index] = {
+      ...this.bookingSessions[index],
+      ...updates,
+      updatedAt: Date.now()
+    };
+    return this.bookingSessions[index];
+  }
+
+  async deleteBookingSession(id: number): Promise<boolean> {
+    const index = this.bookingSessions.findIndex(session => session.id === id);
+    if (index === -1) return false;
+
+    this.bookingSessions.splice(index, 1);
+    return true;
   }
 
   // Challenges

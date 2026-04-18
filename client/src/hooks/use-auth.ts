@@ -5,7 +5,13 @@ export function useAuth() {
   return useQuery({
     queryKey: [api.auth.me.path],
     queryFn: async () => {
-      const res = await fetch(api.auth.me.path, { credentials: "include" });
+      // Get active user from localStorage to send to server
+      const activeUser = localStorage.getItem("untamedActiveUser");
+      
+      const res = await fetch(api.auth.me.path, { 
+        credentials: "include",
+        headers: activeUser ? { "x-user-email": activeUser } : {}
+      });
       if (res.status === 401) return null;
       if (!res.ok) throw new Error("Failed to fetch user");
       return api.auth.me.responses[200].parse(await res.json());
