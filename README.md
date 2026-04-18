@@ -126,11 +126,159 @@ sdk/README.md - Comprehensive SDK reference documentation
 - **Reason:** Owner and VIP logic was not working
 - **Files:** `server/routes.ts`, `client/src/utils/auth.ts`, `client/src/hooks/use-auth.ts`
 
-### 6. Sidebar Visibility Logic
+### 6. Real Speech-to-Text Integration (NEW)
+- **Added:** Groq Whisper API integration for accurate speech transcription
+- **Added:** AIVoiceTrainer component with real-time audio processing
+- **Added:** POST /api/ai/speech-to-text endpoint with audio format conversion
+- **Added:** Health check endpoint for STT service monitoring
+- **Replaced:** Browser SpeechRecognition API with server-side Groq Whisper
+- **Reason:** More accurate and reliable speech-to-text processing
+- **Files:** `server/api/speech-to-text.ts`, `client/src/components/AIVoiceTrainer.tsx`
+
+### 7. Text-to-Speech Integration (NEW)
+- **Added:** OpenAI TTS API integration for AI voice responses
+- **Added:** TTS toggle control in AIVoiceTrainer component
+- **Added:** POST /api/ai/text-to-speech endpoint with MP3 audio generation
+- **Added:** Audio playback functionality with loading states
+- **Added:** Health check endpoint for TTS service monitoring
+- **Reason:** Enable AI agent to speak responses aloud for better user experience
+- **Files:** `server/api/text-to-speech.ts`, `client/src/components/AIVoiceTrainer.tsx`
+
+### 8. AI-Generated Exercise Images (NEW)
+- **Added:** Fireworks image generation API for exercise illustrations
+- **Added:** POST /api/ai/generate-exercise-image endpoint with fitness-style prompts
+- **Added:** Exercise image library caching system (exerciseLibrary.json)
+- **Added:** Image display in WorkoutModal and WorkoutCalendar components
+- **Added:** Hover tooltips with exercise images in calendar view
+- **Reason:** Enhance visual experience with professional exercise illustrations
+- **Files:** `server/api/generate-exercise-image.ts`, `server/ai-workout-agent.ts`, `client/src/components/WorkoutModal.tsx`, `client/src/pages/WorkoutCalendar.tsx`
+
+### 9. Sidebar Visibility Logic
 - **Fixed:** Untamed Studio access for owner/VIP users
 - **Verified:** Layout.tsx correctly checks owner status
 - **Reason:** Premium features were not accessible to authorized users
 - **Files:** `client/src/components/Layout.tsx`
+
+## Speech-to-Text Architecture
+
+### Voice Pipeline Flow
+```
+User speaks via microphone 
+    -> AIVoiceTrainer component (WebM audio)
+    -> POST /api/ai/speech-to-text (base64 audio)
+    -> Audio format conversion (WebM -> WAV)
+    -> Groq Whisper API (whisper-large-v3)
+    -> Text transcript
+    -> AI agent (/api/ai/workout-agent)
+    -> Workout Calendar integration
+```
+
+### STT API Endpoints
+
+#### POST /api/ai/speech-to-text
+- **Purpose:** Convert audio to text using Groq Whisper
+- **Input:** `{ audio: "base64-string", audioFormat?: "webm" }`
+- **Output:** `{ success: true, transcript: "spoken text", metadata: {...} }`
+- **Audio Formats:** WebM, WAV, MP3, MP4, OGG (auto-converted)
+- **Size Limit:** 50MB audio payload
+
+#### GET /api/ai/speech-to-text/health
+- **Purpose:** Check STT service status
+- **Output:** `{ success: true, service: "speech-to-text", status: "healthy" }`
+
+### Component Integration
+- **AIVoiceTrainer:** React component with recording controls and audio processing
+- **Auto-send:** Transcripts automatically sent to AI agent
+- **Error Handling:** Graceful fallback for missing API keys or network issues
+- **UI States:** Recording, processing, success, error feedback
+
+### Configuration Requirements
+- **Environment Variable:** `GROQ_API_KEY` (required for STT)
+- **Dependencies:** `groq-sdk` package, audio conversion utilities
+- **Permissions:** Microphone access in browser
+
+## Text-to-Speech Architecture
+
+### AI Voice Pipeline Flow
+```
+AI agent generates text response
+    -> AIVoiceTrainer component (text)
+    -> POST /api/ai/text-to-speech (text input)
+    -> OpenAI TTS API (tts-1 model, alloy voice)
+    -> MP3 audio generation
+    -> Base64 audio returned
+    -> Audio playback in browser
+```
+
+### TTS API Endpoints
+
+#### POST /api/ai/text-to-speech
+- **Purpose:** Convert text to speech using OpenAI TTS
+- **Input:** `{ text: "string", voice?: "alloy" }`
+- **Output:** `{ success: true, audio: "base64-mp3", format: "mp3", provider: "openai" }`
+- **Voice Options:** alloy, echo, fable, onyx, nova, shimmer
+- **Model:** tts-1 (optimized for real-time applications)
+
+#### GET /api/ai/text-to-speech/health
+- **Purpose:** Check TTS service status
+- **Output:** `{ success: true, service: "text-to-speech", status: "healthy", availableProviders: ["openai"] }`
+
+### Component Integration
+- **AIVoiceTrainer:** React component with TTS toggle and audio playback
+- **Voice Toggle:** "AI Voice: On/Off" control for enabling/disabling TTS
+- **Auto-play:** AI responses automatically spoken when TTS is enabled
+- **Error Handling:** Graceful fallback for missing API keys or audio playback issues
+- **UI States:** Playing, processing, success, error feedback
+
+### Configuration Requirements
+- **Environment Variable:** `OPENAI_API_KEY` (required for TTS)
+- **Dependencies:** `openai` package, audio playback utilities
+- **Permissions:** Audio playback in browser (usually enabled by default)
+
+## AI-Generated Exercise Images Architecture
+
+### Image Generation Pipeline Flow
+```
+AI agent generates workout plan
+    -> Loop through each exercise in plan
+    -> Check exerciseLibrary.json for cached image
+    -> If no cached image, call POST /api/ai/generate-exercise-image
+    -> Fireworks API generates fitness illustration
+    -> Image URL saved to exerciseLibrary.json
+    -> imageUrl attached to exercise object
+    -> Frontend displays images in WorkoutModal and WorkoutCalendar
+```
+
+### Image Generation API Endpoints
+
+#### POST /api/ai/generate-exercise-image
+- **Purpose:** Generate fitness-style exercise illustrations using Fireworks
+- **Input:** `{ exerciseName: "string" }`
+- **Output:** `{ success: true, imageUrl: "url", cached: false, exerciseName: "string" }`
+- **Model:** fireworks/image-gen-diffusion-xl
+- **Image Size:** 512x512 pixels
+- **Format:** Fitness illustrations (no faces, no copyrighted characters)
+
+#### GET /api/ai/generate-exercise-image/health
+- **Purpose:** Check image generation service status
+- **Output:** `{ success: true, service: "generate-exercise-image", status: "healthy", availableModels: [...] }`
+
+#### GET /api/ai/generate-exercise-image/library
+- **Purpose:** Get cached exercise image library
+- **Output:** `{ success: true, exerciseLibrary: {...}, count: number }`
+
+### Frontend Integration
+- **WorkoutModal:** Displays exercise image next to exercise name
+- **WorkoutCalendar:** Shows exercise images in hover tooltips
+- **Image Caching:** Images cached in exerciseLibrary.json for reuse
+- **Fallback:** Placeholder icons when no image available
+- **Responsive:** Maintains mobile-friendly layout
+
+### Configuration Requirements
+- **Environment Variable:** `FIREWORKS_API_KEY` (required for image generation)
+- **Dependencies:** `fireworks-ai` package, image processing utilities
+- **Storage:** exerciseLibrary.json for image URL caching
+- **File Size:** Generated images typically 50-200KB
 
 ## Migration Details
 

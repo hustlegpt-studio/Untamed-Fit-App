@@ -34,6 +34,11 @@ const [conversationHistory, setConversationHistory] = useState<ConversationMessa
   const resetMutation = useResetConversation();
   const queryClient = useQueryClient();
   const { refetch: refetchWorkouts } = useUserWorkoutSessions();
+  
+  // TTS state
+  const [isTTSEnabled, setIsTTSEnabled] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [ttsError, setTTSError] = useState<string | null>(null);
 
   // Auto-scroll to latest message
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -49,21 +54,21 @@ const [conversationHistory, setConversationHistory] = useState<ConversationMessa
       setIsProcessing(true);
       
       try {
-        // Convert audio to text (simplified - in production would use speech-to-text API)
-        const simulatedTranscript = await simulateSpeechToText(audioBlob);
-        setTranscript(simulatedTranscript);
+        // Convert audio to text using real STT API
+        const transcript = await transcribeAudioWithGroq(audioBlob);
+        setTranscript(transcript);
         
         // Add to conversation history
         const newMessage = {
           type: 'user' as const,
-          content: simulatedTranscript,
+          content: transcript,
           timestamp: new Date()
         };
         setConversationHistory(prev => [...prev, newMessage]);
         
         // Send to AI agent
         const response = await aiMutation.mutateAsync({ 
-          message: simulatedTranscript, 
+          message: transcript, 
           targetDate 
         });
         
@@ -123,6 +128,11 @@ const [conversationHistory, setConversationHistory] = useState<ConversationMessa
       };
       setConversationHistory(prev => [...prev, userMessage, aiMessage]);
       
+      // Play AI response using TTS if enabled
+      if (isTTSEnabled && response.message) {
+        playAIResponseAudio(response.message);
+      }
+      
       // Refresh workouts if plan was generated
       if (response.completed && response.plan) {
         refetchWorkouts();
@@ -146,30 +156,125 @@ const [conversationHistory, setConversationHistory] = useState<ConversationMessa
       setConversationHistory([]);
       setAiResponse(null);
       setTranscript("");
+      setTTSError(null);
     } catch (error) {
       console.error("Reset error:", error);
     }
   };
 
-  // Simulate speech-to-text (in production, would use actual API)
-  async function simulateSpeechToText(audioBlob: Blob): Promise<string> {
-    // This is a placeholder - in production would use speech-to-text API
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  // TTS function for AI responses
+  const playAIResponseAudio = async (text: string) => {
+    if (!text.trim() || !isTTSEnabled) return;
     
-    // Simulate different types of fitness requests
-    const sampleTexts = [
-      "I want to generate a weekly workout plan",
-      "Can you create a 5 day workout plan for me",
-      "I want to build muscle and I have dumbbells",
-      "Create a workout plan for weight loss",
-      "I completed my workout today",
-      "Add a chest workout to my calendar",
-      "Mark my leg workout as complete",
-      "What's a good workout for beginners",
-      "I have 30 minutes available for workouts"
-    ];
-    
-    return sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
+    try {
+      setIsPlaying(true);
+      setTTSError(null);
+      
+      console.log('🔊 Requesting TTS for AI response...');
+      
+      const response = await fetch('/api/ai/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text.trim(),
+          voice: 'alloy' // Natural voice for AI responses
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.audio) {
+        console.log(`✅ TTS audio generated (${data.audio.length} bytes)`);
+        
+        // Convert base64 to blob and play
+        const audioBytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+        const audioBlob = new Blob([audioBytes], { type: 'audio/mp3' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        const audio = new Audio(audioUrl);
+        audio.play();
+        
+        audio.onended = () => {
+          setIsPlaying(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+      } else {
+        throw new Error('No audio received from TTS service');
+      }
+
+    } catch (error) {
+      console.error('🔊 TTS Error:', error);
+      setTTSError(error instanceof Error ? error.message : 'Failed to generate speech');
+      setIsPlaying(false);
+    }
+  };
+
+  // Real speech-to-text using Groq Whisper API
+  async function transcribeAudioWithGroq(audioBlob: Blob): Promise<string> {
+    try {
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = reader.result as string;
+        const base64Data = base64Audio.split(',')[1]; // Remove data URL prefix
+
+        try {
+          // Call our real STT endpoint
+          const response = await fetch('/api/ai/speech-to-text', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              audio: base64Data,
+              audioFormat: 'webm' // Browser records in WebM format
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          
+          if (data.success && data.transcript) {
+            console.log(`✅ Real STT transcription: "${data.transcript}"`);
+            return data.transcript;
+          } else if (data.warning) {
+            console.warn('⚠️ STT warning:', data.warning);
+            throw new Error('No speech detected in audio');
+          } else {
+            throw new Error('No transcript received from STT service');
+          }
+
+        } catch (apiError) {
+          console.error('🎤 STT API error:', apiError);
+          const errorMessage = apiError instanceof Error ? apiError.message : 'Failed to transcribe audio';
+          throw new Error(errorMessage);
+        }
+      };
+
+      reader.onerror = () => {
+        console.error('🎤 Failed to read audio blob');
+        throw new Error('Failed to process recorded audio');
+      };
+
+      reader.readAsDataURL(audioBlob);
+
+    } catch (error) {
+      console.error('🎤 Transcription error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Transcription failed';
+      throw new Error(errorMessage);
+    }
   }
 
   if (!isOpen) return null;
@@ -309,6 +414,36 @@ const [conversationHistory, setConversationHistory] = useState<ConversationMessa
                   rows={3}
                   disabled={isProcessing}
                 />
+              </div>
+
+              {/* TTS Toggle */}
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-300">AI Voice:</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    isTTSEnabled ? 'bg-green-500/20 text-green-400' : 'bg-gray-600/20 text-gray-400'
+                  }`}>
+                    {isTTSEnabled ? 'On' : 'Off'}
+                  </span>
+                  {isPlaying && (
+                    <span className="text-xs text-primary animate-pulse">
+                      🔊 Playing...
+                    </span>
+                  )}
+                  {ttsError && (
+                    <span className="text-xs text-red-400">
+                      ⚠️ {ttsError}
+                    </span>
+                  )}
+                </div>
+                <Button
+                  onClick={() => setIsTTSEnabled(!isTTSEnabled)}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  {isTTSEnabled ? 'Disable' : 'Enable'} Voice
+                </Button>
               </div>
 
               {/* Action Buttons */}

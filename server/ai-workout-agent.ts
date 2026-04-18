@@ -137,6 +137,43 @@ function getMissingFields(state: ConversationState): string[] {
   return missing;
 }
 
+// Generate image for exercise
+async function generateExerciseImage(exerciseName: string): Promise<string | null> {
+  try {
+    console.log(`\ud83c\udfa8 Generating image for exercise: ${exerciseName}`);
+    
+    const response = await fetch('http://localhost:9688/api/ai/generate-exercise-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        exerciseName: exerciseName.trim()
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(`\ud83c\udfa8 Image generation failed for ${exerciseName}:`, errorData.error);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (data.success && data.imageUrl) {
+      console.log(`\u2705 Image generated for ${exerciseName}: ${data.imageUrl}`);
+      return data.imageUrl;
+    } else {
+      console.error(`\ud83c\udfa8 No image URL returned for ${exerciseName}`);
+      return null;
+    }
+
+  } catch (error) {
+    console.error(`\ud83c\udfa8 Error generating image for ${exerciseName}:`, error);
+    return null;
+  }
+}
+
 // Generate workout plan using Groq
 async function generateWorkoutPlan(state: ConversationState): Promise<any> {
   const exerciseLibrary = loadExerciseLibrary();
@@ -195,7 +232,38 @@ Be intense, motivational, and use Kevin's personality! 🦁💪🔥
     
     if (jsonMatch) {
       try {
-        return JSON.parse(jsonMatch[0]);
+        const workoutPlan = JSON.parse(jsonMatch[0]);
+        
+        // Generate images for exercises in the plan (async, non-blocking)
+        if (workoutPlan.plan && Array.isArray(workoutPlan.plan)) {
+          console.log(`\ud83c\udfa8 Generating images for ${workoutPlan.plan.length} exercises...`);
+          
+          // Generate images for each exercise in parallel (non-blocking)
+          const imagePromises = workoutPlan.plan.map(async (dayPlan: any, index: number) => {
+            if (dayPlan.workout && dayPlan.workout.name) {
+              const exerciseName = dayPlan.workout.name;
+              console.log(`\ud83c\udfa8 Processing exercise ${index + 1}/${workoutPlan.plan.length}: ${exerciseName}`);
+              
+              // Generate image
+              const imageUrl = await generateExerciseImage(exerciseName);
+              
+              if (imageUrl) {
+                dayPlan.workout.imageUrl = imageUrl;
+                console.log(`\u2705 Image added for ${exerciseName}`);
+              } else {
+                console.log(`\u26a0\ufe0f No image generated for ${exerciseName}, continuing without image`);
+              }
+            }
+            return dayPlan;
+          });
+          
+          // Process images in background without blocking the main response
+          Promise.all(imagePromises).catch(error => {
+            console.error('Error in background image generation:', error);
+          });
+        }
+        
+        return workoutPlan;
       } catch (e) {
         console.error("Failed to parse AI response:", e);
         return { plan: [], message: "Had trouble creating your plan, let's try again!" };

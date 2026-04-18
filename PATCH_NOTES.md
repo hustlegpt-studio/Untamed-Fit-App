@@ -1,5 +1,133 @@
 # Untamed Fit - Patch Notes
 
+## Version 2.3.0 - AI-Generated Exercise Images
+**Date:** April 18, 2026  
+**Type:** Feature Enhancement  
+**Breaking Changes:** None
+
+### New Features
+- **Exercise Image Generation:** Fireworks AI integration for fitness-style exercise illustrations
+- **Image Caching System:** exerciseLibrary.json for storing and reusing generated images
+- **Visual Enhancement:** Exercise images displayed in WorkoutModal and WorkoutCalendar
+- **Hover Tooltips:** Interactive image previews in calendar view
+- **Auto-Generation:** Images generated automatically when AI creates workout plans
+
+### Technical Implementation
+- **Image API:** Fireworks image-gen-diffusion-xl model for professional fitness illustrations
+- **Caching Strategy:** Images cached locally to avoid repeated API calls
+- **Async Processing:** Non-blocking image generation during workout plan creation
+- **Fitness Prompts:** Specialized prompts for exercise illustrations (no faces, no copyrighted content)
+- **Error Handling:** Graceful fallback when image generation fails
+
+### Files Added
+- `server/api/generate-exercise-image.ts` - New image generation service with Fireworks integration
+- `exerciseLibrary.json` - Exercise image cache storage (auto-created)
+
+### Files Modified
+- `server/routes.ts` - Added image generation route registration
+- `server/ai-workout-agent.ts` - Added image generation to workout plan creation
+- `client/src/components/WorkoutModal.tsx` - Added exercise image display
+- `client/src/pages/WorkoutCalendar.tsx` - Added hover tooltips with exercise images
+- `README.md` - Added image generation architecture documentation
+- `PATCH_NOTES.md` - Added version 2.3.0 release notes
+
+### Configuration
+- **Environment Variable:** `FIREWORKS_API_KEY` (required for image generation)
+- **Dependencies:** `fireworks-ai` package, existing image handling utilities
+- **Storage:** exerciseLibrary.json for image URL caching
+- **Image Size:** 512x512 pixels, fitness-style illustrations
+
+### Integration Notes
+- **AI Agent Pipeline:** Workout plan generation -> Image generation -> Image caching -> Frontend display
+- **Non-Blocking:** Images generated in background without delaying workout plan responses
+- **Reusable:** Cached images reused across different workout plans
+- **Fallback:** Placeholder icons displayed when image generation fails
+- **Mobile Responsive:** Image display maintains mobile-friendly layout
+
+---
+
+## Version 2.2.0 - Text-to-Speech Integration
+**Date:** April 18, 2026  
+**Type:** Feature Enhancement  
+**Breaking Changes:** None
+
+### New Features
+- **AI Voice Responses:** OpenAI TTS integration for speaking AI responses aloud
+- **TTS Toggle Control:** "AI Voice: On/Off" toggle in AIVoiceTrainer component
+- **Audio Playback:** Automatic MP3 audio generation and playback
+- **Health Monitoring:** GET /api/ai/text-to-speech/health for service status
+- **Voice Options:** Multiple voice options (alloy, echo, fable, onyx, nova, shimmer)
+
+### Technical Implementation
+- **TTS API:** OpenAI TTS-1 model optimized for real-time applications
+- **Audio Format:** MP3 generation with base64 encoding for frontend
+- **Auto-play:** AI responses automatically spoken when TTS is enabled
+- **Error Handling:** Graceful fallback for missing API keys or playback issues
+- **UI States:** Playing, processing, success, error feedback indicators
+
+### Files Added
+- `server/api/text-to-speech.ts` - New TTS service with OpenAI integration
+- Updated `client/src/components/AIVoiceTrainer.tsx` - Added TTS toggle and playback
+
+### Files Modified
+- `server/routes.ts` - Added TTS route registration
+- `README.md` - Added TTS architecture documentation
+- `PATCH_NOTES.md` - Added version 2.2.0 release notes
+
+### Configuration
+- **Environment Variable:** `OPENAI_API_KEY` (required for TTS functionality)
+- **Dependencies:** `openai` package, existing audio utilities
+- **Permissions:** Audio playback in browser (usually enabled by default)
+
+### Integration Notes
+- **AI Agent Response:** Text automatically converted to speech when TTS enabled
+- **Voice Pipeline:** AI agent text response -> TTS API -> MP3 audio -> browser playback
+- **Multi-turn Support:** Works for both typed and voice messages in conversations
+- **User Control:** Toggle allows users to enable/disable voice responses
+- **Fallback Behavior:** Graceful degradation when TTS provider unavailable
+
+---
+
+## Version 2.1.0 - Real Speech-to-Text Integration
+**Date:** April 18, 2026  
+**Type:** Feature Enhancement  
+**Breaking Changes:** None
+
+### New Features
+- **Real STT Pipeline:** Replaced browser SpeechRecognition with Groq Whisper API
+- **AIVoiceTrainer Component:** New React component with professional audio recording
+- **STT API Endpoint:** POST /api/ai/speech-to-text with audio format conversion
+- **Health Monitoring:** GET /api/ai/speech-to-text/health for service status
+- **Auto-Send Integration:** Voice transcripts automatically sent to AI agent
+
+### Technical Implementation
+- **Audio Processing:** WebM -> WAV conversion for Groq compatibility
+- **Error Handling:** Graceful fallback for missing API keys or network issues
+- **UI States:** Recording, processing, success, error feedback
+- **Pipeline Flow:** Voice -> STT -> AI agent -> Workout Calendar
+
+### Files Added
+- `server/api/speech-to-text.ts` - New STT service with Groq Whisper integration
+- `client/src/components/AIVoiceTrainer.tsx` - Professional voice recording component
+
+### Files Modified
+- `server/routes.ts` - Added STT route registration
+- `README.md` - Added STT architecture documentation
+- `PATCH_NOTES.md` - Added version 2.1.0 release notes
+
+### Configuration
+- **Environment Variable:** `GROQ_API_KEY` (required for STT functionality)
+- **Dependencies:** `groq-sdk` package, existing audio utilities
+- **Permissions:** Microphone access required in browser
+
+### Integration Notes
+- **Voice → STT:** Audio recorded in WebM format, converted to base64, sent to endpoint
+- **STT → AI Agent:** Transcripts automatically passed to useAIWorkoutAgent mutation
+- **AI Agent → Workout Calendar:** Existing pipeline preserved and functional
+- **Multi-turn Logic:** Conversation history and context maintained
+
+---
+
 ## Version 2.0.1 - Server Port & Demo Message Update
 **Date:** April 14, 2026  
 **Type:** Minor Update  

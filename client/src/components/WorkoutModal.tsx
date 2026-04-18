@@ -56,6 +56,7 @@ export function WorkoutModal({ isOpen, onClose, selectedDate, editingSession }: 
   const [userWeight, setUserWeight] = useState(user?.weight || "");
   const [notes, setNotes] = useState("");
   const [workoutType, setWorkoutType] = useState("");
+  const [exerciseImage, setExerciseImage] = useState<string | null>(null);
 
   // Pre-fill form if editing
   useEffect(() => {
@@ -68,6 +69,7 @@ export function WorkoutModal({ isOpen, onClose, selectedDate, editingSession }: 
       setUserWeight(editingSession.userWeight?.toString() || "");
       setNotes(editingSession.notes || "");
       setWorkoutType(editingSession.workoutType || "");
+      setExerciseImage(editingSession.imageUrl || null);
     } else {
       // Reset form for new workout
       setWorkoutName("");
@@ -78,8 +80,49 @@ export function WorkoutModal({ isOpen, onClose, selectedDate, editingSession }: 
       setUserWeight(user?.weight || "");
       setNotes("");
       setWorkoutType("");
+      setExerciseImage(null);
     }
   }, [editingSession, user]);
+
+  // Fetch exercise image when workout name changes
+  useEffect(() => {
+    if (workoutName.trim()) {
+      fetchExerciseImage(workoutName.trim());
+    } else {
+      setExerciseImage(null);
+    }
+  }, [workoutName]);
+
+  // Fetch exercise image from library
+  const fetchExerciseImage = async (exerciseName: string) => {
+    try {
+      console.log(`\ud83c\udfa8 Fetching image for exercise: ${exerciseName}`);
+      
+      const response = await fetch('/api/ai/generate-exercise-image/library');
+      if (!response.ok) {
+        console.error('Failed to fetch exercise library');
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.exerciseLibrary) {
+        const normalizedName = exerciseName.toLowerCase().trim();
+        const exerciseData = data.exerciseLibrary[normalizedName];
+        
+        if (exerciseData?.imageUrl) {
+          console.log(`\u2705 Found existing image for ${exerciseName}: ${exerciseData.imageUrl}`);
+          setExerciseImage(exerciseData.imageUrl);
+        } else {
+          console.log(`\ud83d\udd0d No image found for ${exerciseName}`);
+          setExerciseImage(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching exercise image:', error);
+      setExerciseImage(null);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,13 +212,29 @@ export function WorkoutModal({ isOpen, onClose, selectedDate, editingSession }: 
                 <Label className="text-silver text-sm font-medium mb-2 block">
                   Exercise Name
                 </Label>
-                <Input
-                  value={workoutName}
-                  onChange={(e) => setWorkoutName(e.target.value)}
-                  placeholder="e.g., Push-ups, Squats, Running"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-silver/40"
-                  required
-                />
+                <div className="flex gap-3">
+                  <Input
+                    value={workoutName}
+                    onChange={(e) => setWorkoutName(e.target.value)}
+                    placeholder="e.g., Push-ups, Squats, Running"
+                    className="bg-white/5 border-white/20 text-white placeholder:text-silver/40 flex-1"
+                    required
+                  />
+                  {exerciseImage ? (
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-white/5 border border-white/20 flex-shrink-0">
+                      <img 
+                        src={exerciseImage} 
+                        alt={workoutName || "Exercise"}
+                        className="w-full h-full object-cover"
+                        onError={() => setExerciseImage(null)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-white/5 border border-white/20 flex-shrink-0 flex items-center justify-center">
+                      <Target className="w-6 h-6 text-silver/40" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Body Part */}

@@ -7,6 +7,12 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerAudioRoutes } from "./replit_integrations/audio";
 import { registerKevinRoutes } from "./api/kevin";
 import { registerKevinFreeRoutes } from "./api/kevin-free";
+import { registerSpeechToTextRoutes } from "./api/speech-to-text";
+import { registerTextToSpeechRoutes } from "./api/text-to-speech";
+import { registerGenerateExerciseImageRoutes } from "./api/generate-exercise-image";
+import { registerBatchImageGenerationRoutes } from "./api/batch-image-generation";
+import { registerExerciseImageUploadRoutes } from "./api/exercise-image-upload";
+import { registerImageAnalyticsRoutes } from "./api/image-analytics";
 import spotifyRoutes from "./spotify";
 import { handleWorkoutAgentRequest, resetConversationState } from "./ai-workout-agent";
 
@@ -345,6 +351,12 @@ export async function registerRoutes(
   registerAudioRoutes(app);
   registerKevinRoutes(app);
   registerKevinFreeRoutes(app);
+  registerSpeechToTextRoutes(app);
+  registerTextToSpeechRoutes(app);
+  registerGenerateExerciseImageRoutes(app);
+  registerBatchImageGenerationRoutes(app);
+  registerExerciseImageUploadRoutes(app);
+  registerImageAnalyticsRoutes(app);
   
   // Register Spotify routes
   app.use('/api/spotify', spotifyRoutes);

@@ -63,14 +63,20 @@ function getFirstDayOfMonth(date: Date): number {
 }
 
 export default function WorkoutCalendar() {
+  const { data: user } = useAuth();
+  const userId = user?.id || 1;
+  
   const { data: sessions = [], isLoading } = useUserWorkoutSessions();
   const deleteMutation = useDeleteUserWorkoutSession();
   const updateMutation = useUpdateUserWorkoutSession();
+  
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<any>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [hoveredExercise, setHoveredExercise] = useState<string | null>(null);
+  const [exerciseImages, setExerciseImages] = useState<{[key: string]: string}>({});
   const [completionFilter, setCompletionFilter] = useState<"all" | "completed" | "incomplete">("all");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState<any>(null);
   const today = new Date();
@@ -369,7 +375,7 @@ export default function WorkoutCalendar() {
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.05 }}
-                          className="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-primary/30 transition-colors"
+                          className="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-primary/30 transition-colors relative"
                         >
                           <div className="flex items-start gap-2 mb-2">
                             <div
@@ -394,10 +400,37 @@ export default function WorkoutCalendar() {
                               />
                             </div>
                             <div className="flex-1">
-                              <h4 className="text-white font-bold">{session.workoutName}</h4>
+                              <h4 
+                                className="text-white font-bold cursor-pointer hover:text-primary transition-colors"
+                                onMouseEnter={() => setHoveredExercise(session.workoutName)}
+                                onMouseLeave={() => setHoveredExercise(null)}
+                              >
+                                {session.workoutName}
+                              </h4>
                               <p className="text-muted-foreground text-sm">{session.bodyPart}</p>
                             </div>
                           </div>
+                          
+                          {/* Exercise Image Tooltip */}
+                          {hoveredExercise === session.workoutName && (
+                            <div className="absolute z-50 top-full left-0 mt-2 p-2 bg-gray-900 border border-white/20 rounded-lg shadow-xl">
+                              <div className="w-32 h-32 rounded-lg overflow-hidden bg-white/5 border border-white/20">
+                                {exerciseImages[session.workoutName] ? (
+                                  <img 
+                                    src={exerciseImages[session.workoutName]} 
+                                    alt={session.workoutName}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Dumbbell className="w-8 h-8 text-white/20" />
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-xs text-white mt-2 text-center">{session.workoutName}</p>
+                            </div>
+                          )}
+                          
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Zap className="w-3 h-3" />
