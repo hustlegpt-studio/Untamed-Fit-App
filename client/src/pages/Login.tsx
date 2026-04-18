@@ -36,9 +36,28 @@ export default function Login() {
         throw new Error("Invalid email or password");
       }
       
+      // Debug: Check localStorage availability
+      console.log("localStorage available:", typeof Storage !== 'undefined');
+      console.log("Setting active user:", email);
+      
       setActiveUser(email);
-      window.location.href = "/dashboard";
+      
+      // Verify user was set
+      setTimeout(() => {
+        const storedUser = localStorage.getItem("untamedActiveUser");
+        console.log("Stored user after set:", storedUser);
+        
+        if (storedUser === email) {
+          console.log("Login successful, redirecting...");
+          window.location.href = "/dashboard";
+        } else {
+          console.error("Login failed - user not stored properly");
+          setError("Login failed - please try again");
+        }
+      }, 500);
+      
     } catch (err: any) {
+      console.error("Login error:", err);
       setError(err.message || "An error occurred");
     } finally {
       setIsLoading(false);

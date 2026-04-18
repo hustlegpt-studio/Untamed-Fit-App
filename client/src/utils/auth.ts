@@ -49,11 +49,27 @@ export function loginUser(email: string, password: string): User | null {
 }
 
 export function setActiveUser(email: string): void {
-  localStorage.setItem(ACTIVE_USER_KEY, email);
+  try {
+    localStorage.setItem(ACTIVE_USER_KEY, email);
+    console.log("Active user set:", email);
+  } catch (error) {
+    console.error("Failed to set active user:", error);
+    // Fallback to sessionStorage if localStorage fails
+    try {
+      sessionStorage.setItem(ACTIVE_USER_KEY, email);
+    } catch (sessionError) {
+      console.error("Failed to set active user in sessionStorage:", sessionError);
+    }
+  }
 }
 
 export function getActiveUser(): string | null {
-  return localStorage.getItem(ACTIVE_USER_KEY);
+  // Try localStorage first, then fallback to sessionStorage
+  let user = localStorage.getItem(ACTIVE_USER_KEY);
+  if (!user) {
+    user = sessionStorage.getItem(ACTIVE_USER_KEY);
+  }
+  return user;
 }
 
 export function getCurrentUserProfile(): User | null {
@@ -65,7 +81,17 @@ export function getCurrentUserProfile(): User | null {
 }
 
 export function logoutUser(): void {
-  localStorage.removeItem(ACTIVE_USER_KEY);
+  try {
+    localStorage.removeItem(ACTIVE_USER_KEY);
+  } catch (error) {
+    console.error("Failed to remove from localStorage:", error);
+  }
+  
+  try {
+    sessionStorage.removeItem(ACTIVE_USER_KEY);
+  } catch (error) {
+    console.error("Failed to remove from sessionStorage:", error);
+  }
 }
 
 export function isOwner(): boolean {
