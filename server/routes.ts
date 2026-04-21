@@ -13,6 +13,7 @@ import { registerGenerateExerciseImageRoutes } from "./api/generate-exercise-ima
 import { registerBatchImageGenerationRoutes } from "./api/batch-image-generation";
 import { registerExerciseImageUploadRoutes } from "./api/exercise-image-upload";
 import { registerImageAnalyticsRoutes } from "./api/image-analytics";
+import { registerProgressRoutes } from "./api/progress";
 import spotifyRoutes from "./spotify";
 import { handleWorkoutAgentRequest, resetConversationState } from "./ai-workout-agent";
 
@@ -357,6 +358,7 @@ export async function registerRoutes(
   registerBatchImageGenerationRoutes(app);
   registerExerciseImageUploadRoutes(app);
   registerImageAnalyticsRoutes(app);
+  registerProgressRoutes(app);
   
   // Register Spotify routes
   app.use('/api/spotify', spotifyRoutes);

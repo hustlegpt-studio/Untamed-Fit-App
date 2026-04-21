@@ -19,6 +19,7 @@ import Workouts from "@/pages/Workouts";
 import WorkoutDetail from "@/pages/WorkoutDetail";
 import AskKevin from "@/pages/AskKevin";
 import Progress from "@/pages/Progress";
+import ProgressDashboard from "@/pages/ProgressDashboard";
 import Settings from "@/pages/Settings";
 import Merch from "@/pages/Merch";
 import WorkoutWithKevin from "@/pages/WorkoutWithKevin";
@@ -88,6 +89,9 @@ function Router() {
       </Route>
       <Route path="/progress">
         {!authenticated ? <Redirect to="/login" /> : <Progress />}
+      </Route>
+      <Route path="/progress-dashboard">
+        {!authenticated ? <Redirect to="/login" /> : <ProgressDashboard />}
       </Route>
       <Route path="/settings">
         {!authenticated ? <Redirect to="/login" /> : <Settings />}

@@ -14,6 +14,7 @@ import FreeFlowMode from "@/components/FreeFlowMode";
 import { WORKOUTS } from "@/utils/workoutData";
 import { isStartPhrase, getRandomQuote } from "@/utils/startPhrases";
 import { analyzeUserGoal, getTrainerResponse, getUserFitnessProfile } from "@/utils/aiTrainerLogic";
+import { TrendSummaryCard, StrengthTrendSummary, ConsistencyTrendSummary } from "@/components/TrendSummaryCard";
 import { recommendWorkout } from "@/utils/workoutEngine";
 import { getCurrentUserProfile } from "@/utils/auth";
 
@@ -370,31 +371,59 @@ export default function AskKevin() {
           setCurrentWorkout(randomWorkout);
           setStopwatchActive(true);
         } else if (analysis.detected) {
-          const trainerResponse = getTrainerResponse(analysis);
+          // Use the new progress-aware trainer response
+          const profile = getCurrentUserProfile();
+          const userEmail = profile?.email || 'user@example.com';
           
-          if (trainerResponse === "Got it. Before I recommend a workout, let me check your body type and goals.") {
-            const profile = getUserFitnessProfile();
-            setUserProfile(profile);
+          // Handle async trainer response
+          getTrainerResponse(analysis, userEmail).then(trainerResponse => {
+            let finalResponse = trainerResponse;
             
-            if (analysis.bodyPart) {
-              const recommended = recommendWorkout(analysis.bodyPart, {
-                bodyType: profile.bodyType,
-                goals: profile.goals,
-                experienceLevel: profile.experience
-              });
+            // Check if it's a traditional workout request
+            if (trainerResponse.includes("Before I recommend a workout, let me check your body type and goals.")) {
+              const userProfile = getUserFitnessProfile();
+              setUserProfile(userProfile);
               
-              if (recommended) {
-                setCurrentWorkout(recommended);
-                responseContent = `${trainerResponse}\n\nAlright, based on your profile, I've got a ${recommended.name} workout that fits your body type and experience level. Want me to show it?`;
+              if (analysis.bodyPart) {
+                const recommended = recommendWorkout(analysis.bodyPart, {
+                  bodyType: userProfile.bodyType,
+                  goals: userProfile.goals,
+                  experienceLevel: userProfile.experience
+                });
+                
+                if (recommended) {
+                  setCurrentWorkout(recommended);
+                  finalResponse = `${trainerResponse}\n\nAlright, based on your profile, I've got a ${recommended.name} workout that fits your body type and experience level. Want me to show it?`;
+                } else {
+                  finalResponse = `${trainerResponse}\n\nAlright, based on your profile, I've got a workout that fits your body type and experience level. Want me to show it?`;
+                }
               } else {
-                responseContent = `${trainerResponse}\n\nAlright, based on your profile, I've got a workout that fits your body type and experience level. Want me to show it?`;
+                finalResponse = `${trainerResponse}\n\nAlright, based on your profile, I've got a workout that fits your body type and experience level. Want me to show it?`;
               }
-            } else {
-              responseContent = `${trainerResponse}\n\nAlright, based on your profile, I've got a workout that fits your body type and experience level. Want me to show it?`;
             }
-          } else {
-            responseContent = trainerResponse;
-          }
+            
+            // Add progress dashboard link for progress-related responses
+            if (analysis.intent && (analysis.intent === 'progress_review' || analysis.intent === 'exercise_history' || analysis.intent === 'consistency_check' || analysis.intent === 'trend_analysis')) {
+              finalResponse += '\n\n📊 **Want to see your full progress dashboard?** [Click here to view detailed charts and analytics](/progress-dashboard)';
+            }
+            
+            const assistantMsg = { 
+              role: "assistant", 
+              content: finalResponse
+            };
+            setMessages(prev => [...prev, assistantMsg]);
+          }).catch(error => {
+            console.error('Error in progress-aware trainer response:', error);
+            // Fallback to basic response
+            const assistantMsg = { 
+              role: "assistant", 
+              content: "I'm here to help you crush your fitness goals! What specific aspect would you like to focus on?"
+            };
+            setMessages(prev => [...prev, assistantMsg]);
+          });
+          
+          // Don't set responseContent here since we're handling it async
+          return;
         }
         
         const assistantMsg = { 

@@ -443,5 +443,11 @@ The AI service automatically falls back through models in this order:
 ## Testing
 To test AI functionality:
 1. Ensure at least one API key is configured
-2. Use the Train With Kevin panel
+2. Use Train With Kevin panel
 3. Monitor console for model selection and fallback logs
+
+To test Progress Tracking:
+1. Complete a workout session
+2. Check progressHistory.json for data
+3. Visit /progress-dashboard for visualization
+4. Ask AI progress-related questions
