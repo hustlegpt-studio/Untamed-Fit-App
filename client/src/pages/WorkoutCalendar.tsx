@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { formatDuration } from "@/utils/workoutLogger";
 import { useUserWorkoutSessions, useDeleteUserWorkoutSession, useUpdateUserWorkoutSession } from "@/hooks/use-user-workout-sessions";
+import { useAuth } from "@/hooks/use-auth";
 import { WorkoutModal } from "@/components/WorkoutModal";
 import { AIWorkoutGenerator } from "@/components/AIWorkoutGenerator";
 import { AIVoiceTrainer } from "@/components/AIVoiceTrainer";
